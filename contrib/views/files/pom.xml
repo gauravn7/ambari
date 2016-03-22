@@ -241,6 +241,7 @@
         <filtering>false</filtering>
         <includes>
           <include>view.xml</include>
+          <include>hdfs-service.xml</include>
         </includes>
       </resource>
 

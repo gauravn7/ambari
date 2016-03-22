@@ -86,14 +86,14 @@ public class AlertScriptDispatcher implements NotificationDispatcher {
   /**
    * Used to escape text being passed into the shell command.
    */
-  public static final Escaper SHELL_ESCAPE;
-
-  static {
-    final Escapers.Builder builder = Escapers.builder();
-    builder.addEscape('\"', "\\\"");
-    builder.addEscape('!', "\\!");
-    SHELL_ESCAPE = builder.build();
-  }
+//  public static final Escaper SHELL_ESCAPE;
+//
+//  static {
+//    final Escapers.Builder builder = Escapers.builder();
+//    builder.addEscape('\"', "\\\"");
+//    builder.addEscape('!', "\\!");
+//    SHELL_ESCAPE = builder.build();
+//  }
 
   /**
    * Configuration data from the ambari.properties file.
@@ -256,8 +256,8 @@ public class AlertScriptDispatcher implements NotificationDispatcher {
 
     // these could have spaces in them, so quote them so they don't mess up the
     // command line
-    String alertLabel = "\"" + SHELL_ESCAPE.escape(definition.getLabel()) + "\"";
-    String alertText = "\"" + SHELL_ESCAPE.escape(alertInfo.getAlertText()) + "\"";
+    String alertLabel = "\"" + definition.getLabel()+ "\"";
+    String alertText = "\"" + alertInfo.getAlertText() + "\"";
 
     Object[] params = new Object[] { script, definitionName, alertLabel, serviceName,
         alertState.name(), alertText };

@@ -64,6 +64,10 @@ public class DefaultProviderModule extends AbstractProviderModule {
         return new TaskAttemptResourceProvider(propertyIds, keyPropertyIds);
       case View:
         return new ViewResourceProvider();
+      case ViewClusterInstance:
+        return new ViewClusterInstanceProvider();
+      case ViewService:
+        return new ViewServiceResourceProvider();
       case ViewVersion:
         return new ViewVersionResourceProvider();
       case ViewInstance:

@@ -41,42 +41,15 @@ import org.apache.ambari.server.controller.spi.Resource;
 import org.apache.ambari.server.controller.spi.ResourceProvider;
 import org.apache.ambari.server.events.ServiceInstalledEvent;
 import org.apache.ambari.server.events.publishers.AmbariEventPublisher;
-import org.apache.ambari.server.orm.dao.MemberDAO;
-import org.apache.ambari.server.orm.dao.PrivilegeDAO;
-import org.apache.ambari.server.orm.dao.ResourceDAO;
-import org.apache.ambari.server.orm.dao.ResourceTypeDAO;
-import org.apache.ambari.server.orm.dao.UserDAO;
-import org.apache.ambari.server.orm.dao.ViewDAO;
-import org.apache.ambari.server.orm.dao.ViewInstanceDAO;
-import org.apache.ambari.server.orm.entities.GroupEntity;
-import org.apache.ambari.server.orm.entities.MemberEntity;
-import org.apache.ambari.server.orm.entities.PermissionEntity;
-import org.apache.ambari.server.orm.entities.PrincipalEntity;
-import org.apache.ambari.server.orm.entities.PrivilegeEntity;
-import org.apache.ambari.server.orm.entities.ResourceEntity;
-import org.apache.ambari.server.orm.entities.ResourceTypeEntity;
-import org.apache.ambari.server.orm.entities.UserEntity;
-import org.apache.ambari.server.orm.entities.ViewEntity;
-import org.apache.ambari.server.orm.entities.ViewEntityEntity;
-import org.apache.ambari.server.orm.entities.ViewInstanceDataEntity;
-import org.apache.ambari.server.orm.entities.ViewInstanceEntity;
-import org.apache.ambari.server.orm.entities.ViewParameterEntity;
-import org.apache.ambari.server.orm.entities.ViewResourceEntity;
+import org.apache.ambari.server.orm.dao.*;
+import org.apache.ambari.server.orm.entities.*;
 import org.apache.ambari.server.security.SecurityHelper;
 import org.apache.ambari.server.security.authorization.AmbariGrantedAuthority;
 import org.apache.ambari.server.state.Clusters;
 import org.apache.ambari.server.state.StackId;
 import org.apache.ambari.server.state.stack.OsFamily;
 import org.apache.ambari.server.utils.VersionUtils;
-import org.apache.ambari.server.view.configuration.AutoInstanceConfig;
-import org.apache.ambari.server.view.configuration.EntityConfig;
-import org.apache.ambari.server.view.configuration.InstanceConfig;
-import org.apache.ambari.server.view.configuration.ParameterConfig;
-import org.apache.ambari.server.view.configuration.PermissionConfig;
-import org.apache.ambari.server.view.configuration.PersistenceConfig;
-import org.apache.ambari.server.view.configuration.PropertyConfig;
-import org.apache.ambari.server.view.configuration.ResourceConfig;
-import org.apache.ambari.server.view.configuration.ViewConfig;
+import org.apache.ambari.server.view.configuration.*;
 import org.apache.ambari.server.view.validation.ValidationException;
 import org.apache.ambari.view.ViewInstanceDefinition;
 import org.apache.ambari.view.cluster.Cluster;
@@ -122,6 +95,7 @@ public class ViewRegistry {
    * Constants
    */
   private static final String EXTRACTED_ARCHIVES_DIR = "work";
+  private static final String EXTRACTED_SERVICE_DIR = "services";
   private static final String EXTRACT_COMMAND = "extract";
   private static final String ALL_VIEWS_REG_EXP = ".*";
   protected static final int DEFAULT_REQUEST_CONNECT_TIMEOUT = 5000;
@@ -143,6 +117,12 @@ public class ViewRegistry {
    */
   private Map<ViewEntity, Map<String, ViewInstanceEntity>> viewInstanceDefinitions =
       new HashMap<ViewEntity, Map<String, ViewInstanceEntity>>();
+
+  /**
+   * Mapping of service name to service config.
+   */
+  private Map<String,ViewServiceEntity> serviceDefinitions =
+      new HashMap<String, ViewServiceEntity>();
 
   /**
    * Mapping of view names to sub-resources.
@@ -213,6 +193,9 @@ public class ViewRegistry {
    */
   @Inject
   ResourceDAO resourceDAO;
+
+  @Inject
+  ClusterConfigurationDao clusterDao;
 
   /**
    * Resource type data access object.
@@ -464,6 +447,7 @@ public class ViewRegistry {
    * Read all view archives.
    */
   public void readViewArchives() {
+    readServiceDefinitions();
     readViewArchives(false, false, ALL_VIEWS_REG_EXP);
   }
 
@@ -1439,6 +1423,35 @@ public class ViewRegistry {
     privilegeDAO.remove(privilegeEntity);
   }
 
+  private void readServiceDefinitions(){
+    try {
+      File viewDir = configuration.getViewsDir();
+      File[] files  = viewDir.listFiles();
+      String extractedArchivesPath = viewDir.getAbsolutePath() +
+          File.separator + EXTRACTED_SERVICE_DIR;
+
+      if(extractor.ensureExtractedArchiveDirectory(extractedArchivesPath)){
+        if (files != null) {
+          for (final File archiveFile : files) {
+            if (!archiveFile.isDirectory()) {
+              archiveUtility.extractServiceConfig(archiveFile,extractedArchivesPath);
+            }
+          }
+        }
+      }
+
+      for(ServiceConfig serviceConfig : archiveUtility.getServiceConfigFromArchive(extractedArchivesPath)){
+        serviceDefinitions.put(serviceConfig.getName(),new ViewServiceEntity(serviceConfig));
+      }
+
+      LOG.info("Service Definitions size: "+serviceDefinitions.size());
+      LOG.info("Service Definitions: "+serviceDefinitions.keySet());
+    }catch (Exception e) {
+      LOG.error("Caught exception reading service in view archives.", e);
+    }
+
+  }
+
   // read the view archives.
   private void readViewArchives(boolean systemOnly, boolean useExecutor,
                                 String viewNameRegExp) {
@@ -1710,6 +1723,14 @@ public class ViewRegistry {
       }
     }
     return false;
+  }
+
+  public Map<String, ViewServiceEntity> getServiceDefinitions() {
+    return serviceDefinitions;
+  }
+
+  public void addViewClusterConfiguration(ViewClusterConfigurationEntity viewClusterConfigurationEntity){
+    clusterDao.create(viewClusterConfigurationEntity);
   }
 
   // set the status of the given view.

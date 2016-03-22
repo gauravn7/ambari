@@ -18,7 +18,9 @@
 
 package org.apache.ambari.server.view;
 
+import org.apache.ambari.server.view.configuration.ServiceConfig;
 import org.apache.ambari.server.view.configuration.ViewConfig;
+import org.apache.commons.io.FileUtils;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -28,14 +30,16 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.JarInputStream;
 
 /**
@@ -47,7 +51,9 @@ public class ViewArchiveUtility {
    * Constants
    */
   private static final String VIEW_XML = "view.xml";
+  private static final String SERVICE_XML = "service.xml";
   private static final String WEB_INF_VIEW_XML = "WEB-INF/classes/" + VIEW_XML;
+  private static final String WEB_INF_SERVICE_XML = "WEB-INF/classes/" + SERVICE_XML;
   private static final String VIEW_XSD = "view.xsd";
 
 
@@ -84,6 +90,73 @@ public class ViewArchiveUtility {
     } finally {
       configStream.close();
     }
+  }
+
+  public void extractServiceConfig(File archiveFile , final String servicePath) throws IOException{
+
+    Path path = Paths.get(archiveFile.getAbsolutePath());
+    URI uri = URI.create("jar:file:" + path.toUri().getPath());
+    Map<String, String> env = new HashMap<>();
+    FileSystem fs =  FileSystems.newFileSystem(uri, env);
+
+    Files.walkFileTree(fs.getPath("/"),new SimpleFileVisitor<Path>(){
+          @Override
+          public FileVisitResult visitFile(Path file,BasicFileAttributes attrs) throws IOException {
+            Path destFile = Paths.get(servicePath,file.toString());
+            if(file.toString().endsWith("-service.xml") && !destFile.toFile().exists()){
+              Files.copy(file, destFile);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+    });
+
+//    File [] serviceFiles = archiveFile.listFiles( new FileFilter() {
+//      public boolean accept( File file ) {
+//        return file.getName().endsWith("-service.xml");
+//      }
+//    });
+//
+//    for(File file:serviceFiles){
+//      FileUtils.copyFile(file, new File(servicePath + file.getName()));
+//    }
+  }
+
+  /**
+   * Get the view configuration from the given archive file.
+   *
+   * @param servicePath  the archive file
+   *
+   * @return the associated view configuration
+   *
+   * @throws JAXBException if xml is malformed
+   */
+  public List<ServiceConfig> getServiceConfigFromArchive(String servicePath)
+      throws JAXBException, IOException {
+
+    List<ServiceConfig> serviceConfigs = new ArrayList<ServiceConfig>();
+
+    File [] serviceFiles = new File(servicePath).listFiles( new FileFilter() {
+      public boolean accept( File file ) {
+        return file.getName().endsWith("-service.xml");
+      }
+    });
+
+    for(File file : serviceFiles){
+      InputStream configStream = new FileInputStream(file);
+
+      try {
+
+        JAXBContext jaxbContext       = JAXBContext.newInstance(ServiceConfig.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
+        serviceConfigs.add((ServiceConfig)jaxbUnmarshaller.unmarshal(configStream));
+      } finally {
+        configStream.close();
+      }
+    }
+
+    return serviceConfigs;
+
   }
 
   /**
