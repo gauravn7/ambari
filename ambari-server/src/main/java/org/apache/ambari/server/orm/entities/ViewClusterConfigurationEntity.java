@@ -17,19 +17,29 @@
  */
 package org.apache.ambari.server.orm.entities;
 
+import org.apache.commons.collections.map.HashedMap;
+
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.OneToMany;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Cluster Configuration
  */
+@NamedQueries({
+    @NamedQuery(name = "allViewClusterInstances",
+        query = "SELECT viewClusterInstance FROM ViewClusterConfigurationEntity viewClusterInstance"),
+})
 @Table(name = "viewclusterconfiguration")
 @Entity
 public class ViewClusterConfigurationEntity {
@@ -48,7 +58,7 @@ public class ViewClusterConfigurationEntity {
    * The Cluster properties.
    */
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "clusterConfiguration")
-  private Collection<ViewClusterConfigurationPropertyEntity> properties = new HashSet<ViewClusterConfigurationPropertyEntity>();
+  private Collection<ViewClusterServiceEntity> services = new HashSet<ViewClusterServiceEntity>();
 
   public ViewClusterConfigurationEntity() {
   }
@@ -56,6 +66,14 @@ public class ViewClusterConfigurationEntity {
 //  public ViewClusterConfigurationEntity(String name) {
 //    this.name = name;
 //  }
+
+  public Map<String,String> getAllProperties() {
+    Map<String,String> properties = new HashMap<String,String>();
+    for(ViewClusterServiceEntity service : services){
+      properties.putAll(service.getPropertiesAsMap());
+    }
+    return properties;
+  }
 
   public String getName() {
     return name;
@@ -69,21 +87,15 @@ public class ViewClusterConfigurationEntity {
 //    return services;
 //  }
 
-
-  public void putProperty(String key,String value) {
-    ViewClusterConfigurationPropertyEntity property = new ViewClusterConfigurationPropertyEntity();
-    property.setClusterName(name);
-    property.setName(key);
-    property.setValue(value);
-    property.setClusterConfiguration(this);
-    properties.add(property);
+  public void addService(ViewClusterServiceEntity service){
+    services.add(service);
   }
 
-  public Collection<ViewClusterConfigurationPropertyEntity> getProperties() {
-    return properties;
+  public Collection<ViewClusterServiceEntity> getServices() {
+    return services;
   }
 
-  public void setProperties(Collection<ViewClusterConfigurationPropertyEntity> properties) {
-    this.properties = properties;
+  public void setServices(Collection<ViewClusterServiceEntity> services) {
+    this.services = services;
   }
 }

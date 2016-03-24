@@ -73,6 +73,7 @@
     <class>org.apache.ambari.server.orm.entities.WidgetEntity</class>
     <class>org.apache.ambari.server.orm.entities.ViewEntity</class>
     <class>org.apache.ambari.server.orm.entities.ViewClusterConfigurationEntity</class>
+    <class>org.apache.ambari.server.orm.entities.ViewClusterServiceEntity</class>
     <class>org.apache.ambari.server.orm.entities.ViewClusterConfigurationPropertyEntity</class>
     <class>org.apache.ambari.server.orm.entities.ViewEntityEntity</class>
     <class>org.apache.ambari.server.orm.entities.ViewInstanceDataEntity</class>

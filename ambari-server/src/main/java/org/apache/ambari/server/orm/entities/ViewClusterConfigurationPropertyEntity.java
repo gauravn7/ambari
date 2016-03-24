@@ -25,8 +25,12 @@ import javax.persistence.*;
 public class ViewClusterConfigurationPropertyEntity {
 
   @Id
-  @Column(name = "cluster_name", nullable = false, insertable = false, updatable = false)
+  @Column(name = "cluster_name", nullable = false, insertable = false, updatable = false, length = 100)
   private String clusterName;
+
+  @Id
+  @Column(name = "service_name", nullable = false, insertable = false, updatable = false)
+  private String serviceName;
 
   /**
    * The property key.
@@ -43,8 +47,11 @@ public class ViewClusterConfigurationPropertyEntity {
   private String value;
 
   @ManyToOne
-  @JoinColumn(name = "cluster_name", referencedColumnName = "name", nullable = false)
-  private ViewClusterConfigurationEntity clusterConfiguration;
+  @JoinColumns({
+      @JoinColumn(name = "service_name", referencedColumnName = "name", nullable = false),
+      @JoinColumn(name = "cluster_name", referencedColumnName = "cluster_name", nullable = false)
+  })
+  private ViewClusterServiceEntity serviceConfiguration;
 
   public ViewClusterConfigurationPropertyEntity() {
   }
@@ -57,12 +64,20 @@ public class ViewClusterConfigurationPropertyEntity {
     return value;
   }
 
-  public ViewClusterConfigurationEntity getClusterConfiguration() {
-    return clusterConfiguration;
+  public ViewClusterServiceEntity getServiceConfiguration() {
+    return serviceConfiguration;
   }
 
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
+  public void setServiceConfiguration(ViewClusterServiceEntity serviceConfiguration) {
+    this.serviceConfiguration = serviceConfiguration;
+  }
+
+  public String getServiceName() {
+    return serviceName;
+  }
+
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
   }
 
   public void setName(String name) {
@@ -73,7 +88,11 @@ public class ViewClusterConfigurationPropertyEntity {
     this.value = value;
   }
 
-  public void setClusterConfiguration(ViewClusterConfigurationEntity clusterConfiguration) {
-    this.clusterConfiguration = clusterConfiguration;
+  public String getClusterName() {
+    return clusterName;
+  }
+
+  public void setClusterName(String clusterName) {
+    this.clusterName = clusterName;
   }
 }

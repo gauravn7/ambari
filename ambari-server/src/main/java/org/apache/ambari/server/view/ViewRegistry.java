@@ -195,7 +195,7 @@ public class ViewRegistry {
   ResourceDAO resourceDAO;
 
   @Inject
-  ClusterConfigurationDao clusterDao;
+  ViewClusterConfigurationDao clusterDao;
 
   /**
    * Resource type data access object.
@@ -1731,6 +1731,10 @@ public class ViewRegistry {
 
   public void addViewClusterConfiguration(ViewClusterConfigurationEntity viewClusterConfigurationEntity){
     clusterDao.create(viewClusterConfigurationEntity);
+  }
+
+  public List<ViewClusterConfigurationEntity> getAllClusterConfigurations(){
+    return clusterDao.findAll();
   }
 
   // set the status of the given view.

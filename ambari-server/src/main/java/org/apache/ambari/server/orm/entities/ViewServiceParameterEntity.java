@@ -27,6 +27,7 @@ import javax.persistence.*;
 @Table(name = "viewserviceparameter")
 @Entity
 public class ViewServiceParameterEntity {
+
   @Id
   @Column(name = "view_service_name", nullable = false, insertable = false, updatable = false)
   private String viewServiceName;

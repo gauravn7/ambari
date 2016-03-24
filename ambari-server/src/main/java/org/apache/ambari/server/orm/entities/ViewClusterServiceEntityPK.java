@@ -24,21 +24,7 @@ import javax.persistence.Id;
 /**
  * Composite primary key for ViewParameterEntity.
  */
-public class ViewClusterConfigurationPropertyEntityPK {
-
-  /**
-   * The view name.
-   */
-  @Id
-  @Column(name = "cluster_name", nullable = false, insertable = false, updatable = false, length = 100)
-  private String clusterName;
-
-  /**
-   * The view name.
-   */
-  @Id
-  @Column(name = "service_name", nullable = false, insertable = false, updatable = false, length = 100)
-  private String serviceName;
+public class ViewClusterServiceEntityPK {
 
   /**
    * The parameter name.
@@ -47,16 +33,24 @@ public class ViewClusterConfigurationPropertyEntityPK {
   @Column(name = "name", nullable = false, insertable = true, updatable = false, length = 100)
   private String name;
 
+  /**
+   * The view name.
+   */
+  @Id
+  @Column(name = "cluster_name", nullable = false, insertable = false, updatable = false, length = 100)
+  private String clusterName;
+
+
 
   // ----- ViewParameterEntityPK ---------------------------------------------
 
 
-  public String getServiceName() {
-    return serviceName;
+  public String getClusterName() {
+    return clusterName;
   }
 
-  public void setServiceName(String serviceName) {
-    this.serviceName = serviceName;
+  public void setClusterName(String clusterName) {
+    this.clusterName = clusterName;
   }
 
   /**
@@ -85,22 +79,14 @@ public class ViewClusterConfigurationPropertyEntityPK {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    ViewClusterConfigurationPropertyEntityPK that = (ViewClusterConfigurationPropertyEntityPK) o;
+    ViewClusterServiceEntityPK that = (ViewClusterServiceEntityPK) o;
 
-    return this.serviceName.equals(that.serviceName) &&
-        this.name.equals(that.name) && this.clusterName.equals(that.clusterName);
+    return this.clusterName.equals(that.clusterName) &&
+        this.name.equals(that.name);
   }
 
   @Override
   public int hashCode() {
-    return 31 * serviceName.hashCode() + name.hashCode() + clusterName.hashCode();
-  }
-
-  public String getClusterName() {
-    return clusterName;
-  }
-
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
+    return 31 * clusterName.hashCode() + name.hashCode();
   }
 }
