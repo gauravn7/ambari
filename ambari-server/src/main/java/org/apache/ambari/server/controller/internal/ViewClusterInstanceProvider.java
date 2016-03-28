@@ -22,11 +22,7 @@ import com.google.inject.persist.Transactional;
 import org.apache.ambari.server.AmbariException;
 import org.apache.ambari.server.controller.spi.*;
 import org.apache.ambari.server.orm.entities.ViewClusterConfigurationEntity;
-import org.apache.ambari.server.orm.entities.ViewClusterConfigurationPropertyEntity;
-import org.apache.ambari.server.orm.entities.ViewClusterConfigurationPropertyEntityPK;
 import org.apache.ambari.server.orm.entities.ViewClusterServiceEntity;
-import org.apache.ambari.server.orm.entities.ViewEntity;
-import org.apache.ambari.server.orm.entities.ViewInstanceEntity;
 import org.apache.ambari.server.view.ViewRegistry;
 
 import java.util.Collections;
@@ -169,7 +165,7 @@ public class ViewClusterInstanceProvider extends AbstractResourceProvider{
     for(ViewClusterServiceEntity service : viewCluster.getServices()){
       Map<String,Object> serviceMap =  new HashMap<String,Object>();
       serviceMap.put(VIEW_CLUSTER_SERVICE_NAME_PROPERTY_ID,service.getName());
-      serviceMap.put(VIEW_CLUSTER_SERVICE_DATA_PROPERTY_ID,service.getPropertiesAsMap());
+      serviceMap.put(VIEW_CLUSTER_SERVICE_DATA_PROPERTY_ID,service.getPropertyMap());
       services.add(serviceMap);
     }
     setResourceProperty(resource, VIEW_CLUSTER_SERVICE_PROPERTY_ID, services, requestedIds);

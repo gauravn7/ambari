@@ -73,7 +73,7 @@ public class ViewClusterServiceEntity {
     properties.add(property);
   }
 
-  public Map<String,String> getPropertiesAsMap(){
+  public Map<String,String> getPropertyMap(){
     Map<String,String> props = new HashMap<String, String>();
     for(ViewClusterConfigurationPropertyEntity property : properties){
       props.put(property.getName(),property.getValue());

@@ -125,6 +125,12 @@ public class ViewRegistry {
       new HashMap<String, ViewServiceEntity>();
 
   /**
+   * Mapping of service name to service config.
+   */
+  private Map<String,ViewClusterConfigurationEntity> viewClusterConfiguration =
+      new HashMap<String, ViewClusterConfigurationEntity>();
+
+  /**
    * Mapping of view names to sub-resources.
    */
   private final Map<String, Set<SubResourceDefinition>> subResourceDefinitionsMap =
@@ -448,6 +454,7 @@ public class ViewRegistry {
    */
   public void readViewArchives() {
     readServiceDefinitions();
+    readClusterConfigurations();
     readViewArchives(false, false, ALL_VIEWS_REG_EXP);
   }
 
@@ -829,15 +836,12 @@ public class ViewRegistry {
    * @return the cluster
    */
   public Cluster getCluster(ViewInstanceDefinition viewInstance) {
-    if (viewInstance != null) {
+    if (viewInstance != null && !viewInstance.isAmbariManaged()) {
       String clusterId = viewInstance.getClusterHandle();
-
-      if (clusterId != null) {
-        try {
-          return new ClusterImpl(clustersProvider.get().getCluster(clusterId));
-        } catch (AmbariException e) {
-          LOG.warn("Could not find the cluster identified by " + clusterId + ".");
-        }
+      try {
+        return new ClusterImpl(clustersProvider.get().getCluster(clusterId));
+      } catch (AmbariException e) {
+        LOG.warn("Could not find the cluster identified by " + clusterId + ".");
       }
     }
     return null;
@@ -1725,12 +1729,27 @@ public class ViewRegistry {
     return false;
   }
 
+  public void readClusterConfigurations(){
+    for(ViewClusterConfigurationEntity clusterConfig : clusterDao.findAll()){
+      viewClusterConfiguration.put(clusterConfig.getName(),clusterConfig);
+    }
+  }
+
   public Map<String, ViewServiceEntity> getServiceDefinitions() {
     return serviceDefinitions;
   }
 
+  public ViewServiceEntity getServiceDefinition(String service) {
+    return serviceDefinitions.get(service);
+  }
+
+  public ViewClusterConfigurationEntity getViewClusterConfiguration(String name) {
+    return viewClusterConfiguration.get(name);
+  }
+
   public void addViewClusterConfiguration(ViewClusterConfigurationEntity viewClusterConfigurationEntity){
     clusterDao.create(viewClusterConfigurationEntity);
+    viewClusterConfiguration.put(viewClusterConfigurationEntity.getName(),viewClusterConfigurationEntity);
   }
 
   public List<ViewClusterConfigurationEntity> getAllClusterConfigurations(){

@@ -116,6 +116,10 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
   @Column(name = "cluster_handle", nullable = true)
   private String clusterHandle;
 
+  @Column(name = "ambari_managed", nullable = false)
+  private char ambariManaged;
+
+
   /**
    * Visible flag.
    */
@@ -202,7 +206,7 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
    * instance is added.
    */
   @Transient
-  private final Map<String, Object> services = new HashMap<String, Object>();
+    private final Map<String, Object> services = new HashMap<String, Object>();
 
   /**
    * Helper class.
@@ -234,6 +238,7 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
     this.clusterHandle = null;
     this.visible = instanceConfig.isVisible() ? 'Y' : 'N';
     this.alterNames = 1;
+    this.ambariManaged = 'N';
 
     String label = instanceConfig.getLabel();
     this.label = (label == null || label.length() == 0) ? view.getLabel() : label;
@@ -270,6 +275,7 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
     this.description = null;
     this.clusterHandle = null;
     this.visible = 'Y';
+    this.ambariManaged = 'N';
     this.alterNames = 1;
     this.label = label;
   }
@@ -335,6 +341,10 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
   @Override
   public String getClusterHandle() {
     return clusterHandle;
+  }
+
+  public boolean isAmbariManaged() {
+    return ambariManaged == 'y' || ambariManaged == 'Y';
   }
 
   @Override
@@ -417,6 +427,10 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
    */
   public void setClusterHandle(String clusterHandle) {
     this.clusterHandle = clusterHandle;
+  }
+
+  public void setAmbariManaged(boolean ambariManaged) {
+    this.ambariManaged = (ambariManaged ? 'Y' : 'N');
   }
 
   /**

@@ -22,8 +22,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
 import org.apache.ambari.server.orm.entities.PermissionEntity;
+import org.apache.ambari.server.orm.entities.ViewClusterConfigurationEntity;
 import org.apache.ambari.server.orm.entities.ViewEntity;
 import org.apache.ambari.server.orm.entities.ViewInstanceEntity;
+import org.apache.ambari.server.orm.entities.ViewServiceEntity;
+import org.apache.ambari.server.orm.entities.ViewServiceParameterEntity;
 import org.apache.ambari.server.view.configuration.ParameterConfig;
 import org.apache.ambari.server.view.configuration.ViewConfig;
 import org.apache.ambari.server.view.events.EventImpl;
@@ -405,12 +408,23 @@ public class ViewContextImpl implements ViewContext, ViewController {
    * @return the property values for the instance
    */
   private Map<String, String> getPropertyValues() {
-    Map<String, String> properties = viewInstanceEntity.getPropertyMap();
+    Map<String, String> properties = new HashMap<String,String>();
+
+    ViewClusterConfigurationEntity viewClusterConfig =  viewRegistry.getViewClusterConfiguration(viewInstanceEntity.getClusterHandle());
+    if(!viewInstanceEntity.isAmbariManaged() && viewClusterConfig != null){
+      properties.putAll(viewClusterConfig.getPropertyMap());
+    }
+    properties.putAll(viewInstanceEntity.getPropertyMap());
 
     Map<String, ParameterConfig> parameters = new HashMap<String, ParameterConfig>();
 
-    for (ParameterConfig paramConfig : viewEntity.getConfiguration().getParameters()) {
-      parameters.put(paramConfig.getName(), paramConfig);
+    for (String service : viewEntity.getConfiguration().getServices()) {
+      ViewServiceEntity serviceEntity = viewRegistry.getServiceDefinition(service);
+      if(serviceEntity != null){
+        for(ParameterConfig paramConfig : serviceEntity.getConfiguration().getParameters()){
+          parameters.put(paramConfig.getName(), paramConfig);
+        }
+      }
     }
 
     Cluster cluster = getCluster();

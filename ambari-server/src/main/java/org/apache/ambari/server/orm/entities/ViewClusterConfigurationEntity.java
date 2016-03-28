@@ -17,9 +17,6 @@
  */
 package org.apache.ambari.server.orm.entities;
 
-import org.apache.commons.collections.map.HashedMap;
-
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -67,10 +64,10 @@ public class ViewClusterConfigurationEntity {
 //    this.name = name;
 //  }
 
-  public Map<String,String> getAllProperties() {
+  public Map<String,String> getPropertyMap() {
     Map<String,String> properties = new HashMap<String,String>();
     for(ViewClusterServiceEntity service : services){
-      properties.putAll(service.getPropertiesAsMap());
+      properties.putAll(service.getPropertyMap());
     }
     return properties;
   }

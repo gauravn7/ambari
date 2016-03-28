@@ -88,4 +88,6 @@ public interface ViewInstanceDefinition {
    * @return the view definition
    */
   public ViewDefinition getViewDefinition();
+
+  public boolean isAmbariManaged();
 }
