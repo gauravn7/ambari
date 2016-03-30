@@ -44,6 +44,11 @@ public class ViewClusterConfigurationDao {
     entityManagerProvider.get().persist(ViewClusterConfigEntity);
   }
 
+  @Transactional
+  public void merge(ViewClusterConfigurationEntity ViewClusterConfigEntity) {
+    entityManagerProvider.get().merge(ViewClusterConfigEntity);
+  }
+
   /**
    * Find all view instances.
    *

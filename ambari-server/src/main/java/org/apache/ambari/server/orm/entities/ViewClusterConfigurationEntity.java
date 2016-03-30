@@ -88,6 +88,10 @@ public class ViewClusterConfigurationEntity {
     services.add(service);
   }
 
+  public void clearServices(){
+    services.clear();
+  }
+
   public Collection<ViewClusterServiceEntity> getServices() {
     return services;
   }

@@ -28,6 +28,7 @@ import org.apache.ambari.server.view.ViewRegistry;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -110,7 +111,15 @@ public class ViewClusterInstanceProvider extends AbstractResourceProvider{
 
   @Override
   public RequestStatus updateResources(Request request, Predicate predicate) throws SystemException, UnsupportedPropertyException, NoSuchResourceException, NoSuchParentResourceException {
-    return null;
+    Iterator<Map<String,Object>> iterator = request.getProperties().iterator();
+    if (iterator.hasNext()) {
+      for (Map<String, Object> propertyMap : getPropertyMaps(iterator.next(), predicate)) {
+        modifyResources(getUpdateCommand(propertyMap));
+      }
+    }
+    notifyUpdate(Resource.Type.ViewClusterInstance, request, predicate);
+
+    return getRequestStatus(null);
   }
 
   @Override
@@ -157,6 +166,24 @@ public class ViewClusterInstanceProvider extends AbstractResourceProvider{
     };
   }
 
+  private Command<Void> getUpdateCommand(final Map<String, Object> properties) {
+    return new Command<Void>() {
+      @Transactional
+      @Override
+      public Void invoke() throws AmbariException {
+        try {
+          ViewRegistry viewRegistry   = ViewRegistry.getInstance();
+          ViewClusterConfigurationEntity clusterEntity = toEntity(properties, true);
+          viewRegistry.updateViewClusterConfiguration(clusterEntity);
+        } catch (Exception e) {
+          // results in a BAD_REQUEST (400) response for the validation failure.
+          throw new IllegalArgumentException(e.getMessage(), e);
+        }
+        return null;
+      }
+    };
+  }
+
   protected Resource toResource(ViewClusterConfigurationEntity viewCluster, Set<String> requestedIds) {
     Resource resource = new ResourceImpl(Resource.Type.ViewClusterInstance);
     setResourceProperty(resource, VIEW_CLUSTER_NAME_PROPERTY_ID, viewCluster.getName() , requestedIds);
@@ -180,8 +207,19 @@ public class ViewClusterInstanceProvider extends AbstractResourceProvider{
     }
 
     ViewRegistry viewRegistry = ViewRegistry.getInstance();
-    ViewClusterConfigurationEntity cluster = new ViewClusterConfigurationEntity();
-    cluster.setName(name);
+
+    ViewClusterConfigurationEntity cluster = null;
+
+    if(update){
+      cluster = viewRegistry.getViewClusterConfiguration(name);
+    }
+
+    if(cluster == null){
+      cluster = new ViewClusterConfigurationEntity();
+      cluster.setName(name);
+    }
+
+    cluster.clearServices();
 
     Boolean isUserAdmin = viewRegistry.checkAdmin();
 

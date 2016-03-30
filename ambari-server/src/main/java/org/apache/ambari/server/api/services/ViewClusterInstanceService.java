@@ -62,28 +62,35 @@ public class ViewClusterInstanceService extends BaseService {
    */
   @POST
   @Produces("text/plain")
-  public Response createServices(String body, @Context HttpHeaders headers, @Context UriInfo ui) {
+  public Response createCluster(String body, @Context HttpHeaders headers, @Context UriInfo ui) {
     return handleRequest(headers, body, ui, Request.Type.POST,
         createViewClusterResource(null));
   }
 
+  @PUT
+  @Produces("text/plain")
+  public Response updateCluster(String body, @Context HttpHeaders headers, @Context UriInfo ui) {
+    return handleRequest(headers, body, ui, Request.Type.PUT,
+      createViewClusterResource(null));
+  }
+
   /**
-   * Handles: GET /views/{viewID}
+   * Handles: GET /viewcluster/{clusterName}
    * Get a specific view.
    *
    * @param headers    http headers
    * @param ui         uri info
-   * @param viewServiceName   view id
+   * @param clusterName   view id
    *
    * @return view instance representation
    */
   @GET
-  @Path("{viewServiceName}")
+  @Path("{clusterName}")
   @Produces("text/plain")
   public Response getViewService(String body, @Context HttpHeaders headers, @Context UriInfo ui,
-                          @PathParam("viewServiceName") String viewServiceName) {
+                          @PathParam("clusterName") String clusterName) {
 
-    return handleRequest(headers, body, ui, Request.Type.GET, createViewClusterResource(viewServiceName));
+    return handleRequest(headers, body, ui, Request.Type.GET, createViewClusterResource(clusterName));
   }
 
   /**

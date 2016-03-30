@@ -1,0 +1,97 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+<ol class="breadcrumb">
+  <li><a href="#/remoteclusters">Remote Clusters</a></li>
+  <li class="active">{{instance.name}}</li>
+</ol>
+<hr>
+
+<form class="form-horizontal create-view-form" role="form" name="form.remoteclusterform" novalidate>
+  <div class="panel panel-default" ng-cloak ng-show="instance">
+    <div class="panel-heading clearfix">
+      <h3 class="panel-title pull-left">Details</h3>
+      <div class="pull-right">
+        <a href ng-click="toggleEdit()" ng-show="!edit" class="settings-edit-toggle"> <span class="glyphicon glyphicon-pencil" ></span> Edit</a>
+        <!--<a href ng-switch-when="true" class="settings-edit-toggle disabled" tooltip="Cannot Edit Static Instances"> <span class="glyphicon glyphicon-pencil" ></span> Edit</a>-->
+      </div>
+    </div>
+    <div class="panel-body">
+        <fieldset ng-disabled="editDetailsSettingsDisabled">
+          <div class="form-group">
+            <label for="" class="col-sm-3 control-label">Name</label>
+
+            <div class="col-sm-9"><input disabled="disabled" type="text" class="form-control instancename-input"
+                                         placeholder="Display Name" value="{{instance.name}}"></div>
+          </div>
+        </fieldset>
+    </div>
+  </div>
+
+  <div ng-repeat="service in instance.services">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{service.name}}</h3>
+      </div>
+      <div class="panel-body property-form">
+        <div class="alert alert-danger bottom-margin top-margin"
+             ng-show='form.remoteclusterform.generalValidationError'>
+          {{form.remoteclusterform.generalValidationError}}
+        </div>
+        <div class="form-group" ng-repeat="parameter in service.parameters"
+             ng-class="{'has-error' : ((form.remoteclusterform[parameter.name].$error.required && form.remoteclusterform.submitted) || form.remoteclusterform[parameter.name].validationError)}">
+
+          <label for="" class="col-sm-3 control-label" ng-class="{'not-required': !parameter.required}">{{parameter.label
+            || parameter.displayName}}{{parameter.required ? '*' : ''}}</label>
+
+          <div ng-switch="parameter.type">
+            <div class="col-sm-9 checkbox" ng-switch-when="boolean">
+              <input ng-disabled="!edit" type="checkbox" class="viewproperty-input" name="{{parameter.name}}"
+                     ng-required="parameter.required" ng-model="parameter.value" popover="{{parameter.description}}"
+                     popover-title="{{parameter.name}}" popover-trigger="mouseenter">
+            </div>
+            <div class="col-sm-9" ng-switch-default>
+              <input ng-disabled="!edit" type="{{parameter.masked ? 'password' : 'text'}}" class="form-control viewproperty-input"
+                     name="{{parameter.name}}"
+                     ng-change="form.remoteclusterform[service.name][parameter.name].validationError=''"
+                     ng-required="parameter.required" ng-model="parameter.value" autocomplete="off"
+                     popover="{{parameter.description}}" popover-title="{{parameter.name}}" popover-trigger="mouseenter"
+                     placeholder="{{parameter.placeholder}}">
+
+              <div class="alert alert-danger no-margin-bottom top-margin"
+                   ng-show='form.remoteclusterform[service.name][parameter.name].$error.required && form.remoteclusterform.submitted'>
+                This field is required.
+              </div>
+              <div class="alert alert-danger no-margin-bottom top-margin"
+                   ng-show='form.remoteclusterform[service.name][parameter.name].validationError'>
+                {{form.remoteclusterform[service.name][parameter.name].validationMessage}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-12 " ng-hide="!edit">
+    <button class="btn btn-primary pull-right left-margin save-button"
+            ng-class="{'disabled' : (form.remoteclusterinstance.isSaving)}" ng-click="save()" type="submit">Save
+    </button>
+    <a href ng-click="cancel()" class="btn btn-default pull-right cancel-button">Cancel</a>
+  </div>
+
+</form>

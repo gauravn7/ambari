@@ -1752,6 +1752,11 @@ public class ViewRegistry {
     viewClusterConfiguration.put(viewClusterConfigurationEntity.getName(),viewClusterConfigurationEntity);
   }
 
+  public void updateViewClusterConfiguration(ViewClusterConfigurationEntity viewClusterConfigurationEntity){
+    clusterDao.merge(viewClusterConfigurationEntity);
+    viewClusterConfiguration.put(viewClusterConfigurationEntity.getName(),viewClusterConfigurationEntity);
+  }
+
   public List<ViewClusterConfigurationEntity> getAllClusterConfigurations(){
     return clusterDao.findAll();
   }
