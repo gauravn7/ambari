@@ -324,6 +324,9 @@ public class ViewInstanceResourceProvider extends AbstractResourceProvider {
     String visible = (String) properties.get(VISIBLE_PROPERTY_ID);
     viewInstanceEntity.setVisible(visible==null ? true : Boolean.valueOf(visible));
 
+    String ambariManaged = (String) properties.get(AMBARI_MANAGED_PROPERTY_ID);
+    viewInstanceEntity.setAmbariManaged(ambariManaged==null ? true : Boolean.valueOf(ambariManaged));
+
     if (properties.containsKey(ICON_PATH_ID)) {
       viewInstanceEntity.setIcon((String) properties.get(ICON_PATH_ID));
     }
@@ -334,10 +337,6 @@ public class ViewInstanceResourceProvider extends AbstractResourceProvider {
 
     if (properties.containsKey(CLUSTER_HANDLE_PROPERTY_ID)) {
       viewInstanceEntity.setClusterHandle((String) properties.get(CLUSTER_HANDLE_PROPERTY_ID));
-    }
-
-    if (properties.containsKey(AMBARI_MANAGED_PROPERTY_ID)) {
-      viewInstanceEntity.setAmbariManaged((boolean) properties.get(AMBARI_MANAGED_PROPERTY_ID));
     }
 
     Map<String, String> instanceProperties = new HashMap<String, String>();

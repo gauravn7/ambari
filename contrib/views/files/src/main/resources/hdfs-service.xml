@@ -18,6 +18,14 @@
     <name>HDFS</name>
 
     <parameter>
+        <name>webhdfs.auth</name>
+        <description>Semicolon-separated authentication configs.</description>
+        <placeholder>auth=SIMPLE</placeholder>
+        <label>WebHDFS Authorization</label>
+        <required>false</required>
+    </parameter>
+
+    <parameter>
         <name>webhdfs.url</name>
         <description>Enter the WebHDFS FileSystem URI. Typically this is the dfs.namenode.http-address
             property in the hdfs-site.xml configuration. URL must be accessible from Ambari Server.</description>
@@ -86,21 +94,6 @@
         <label>Auth To Local</label>
         <required>false</required>
         <cluster-config>core-site/hadoop.security.auth_to_local</cluster-config>
-    </parameter>
-
-    <parameter>
-        <name>webhdfs.username</name>
-        <description>doAs for proxy user for HDFS. By default, uses the currently logged-in Ambari user.</description>
-        <label>WebHDFS Username</label>
-        <default-value>${username}</default-value>
-        <required>false</required>
-    </parameter>
-    <parameter>
-        <name>webhdfs.auth</name>
-        <description>Semicolon-separated authentication configs.</description>
-        <placeholder>auth=SIMPLE</placeholder>
-        <label>WebHDFS Authorization</label>
-        <required>false</required>
     </parameter>
 
 </service-config>

@@ -18,9 +18,11 @@
 'use strict';
 
 angular.module('ambariAdminConsole')
-.controller('ViewsEditCtrl', ['$scope', '$routeParams' , 'Cluster', 'View', 'Alert', 'PermissionLoader', 'PermissionSaver', 'ConfirmationModal', '$location', 'UnsavedDialog', function($scope, $routeParams, Cluster, View, Alert, PermissionLoader, PermissionSaver, ConfirmationModal, $location, UnsavedDialog) {
+.controller('ViewsEditCtrl',
+ ['$scope', '$routeParams' , 'Cluster', 'View','RemoteCluster' , 'Alert', 'PermissionLoader', 'PermissionSaver', 'ConfirmationModal', '$location', 'UnsavedDialog'
+ , function($scope, $routeParams, Cluster, View,RemoteCluster, Alert, PermissionLoader, PermissionSaver, ConfirmationModal, $location, UnsavedDialog) {
   $scope.identity = angular.identity;
-  $scope.isConfigurationEmpty = true;
+  $scope.isConfigurationEmpty = false;
   $scope.isSettingsEmpty = true;
 
   function reloadViewInfo(section){
@@ -52,15 +54,17 @@ angular.module('ambariAdminConsole')
   }
 
   function initCtrlVariables(instance) {
-    if(instance.ViewInstanceInfo.cluster_handle) {
-      $scope.isLocalCluster = true;
+    if(instance.ViewInstanceInfo.ambari_managed) {
+      $scope.$parent.isLocalCluster = true;
       $scope.cluster = instance.ViewInstanceInfo.cluster_handle;
+      $scope.remoteCluster = $scope.remoteClusters.length > 0 ? $scope.remoteClusters[0] : "No Remote Clusters";
     }else{
-      $scope.isLocalCluster = false;
+      $scope.$parent.isLocalCluster = false;
       $scope.cluster = $scope.clusters.length > 0 ? $scope.clusters[0] : "No Clusters";
+      $scope.remoteCluster = instance.ViewInstanceInfo.cluster_handle;
     }
-    $scope.originalLocalCluster = $scope.isLocalCluster;
-    $scope.isConfigurationEmpty = !$scope.numberOfClusterConfigs;
+    $scope.originalLocalCluster = $scope.$parent.isLocalCluster;
+  //  $scope.isConfigurationEmpty = !$scope.numberOfClusterConfigs;
     $scope.isSettingsEmpty = !$scope.numberOfSettingsConfigs;
   }
 
@@ -90,14 +94,14 @@ angular.module('ambariAdminConsole')
   }
 
   function filterClusterConfigs() {
-    $scope.configurationMeta.forEach(function (element) {
-      if (element.masked && !$scope.editConfigurationDisabled && element.clusterConfig && !$scope.isLocalCluster) {
-        $scope.configuration[element.name] = '';
-      }
-      if(!element.clusterConfig) {
-        delete $scope.configurationBeforeEdit[element.name];
-      }
-    });
+//    $scope.configurationMeta.forEach(function (element) {
+//      if (element.masked && !$scope.editConfigurationDisabled && element.clusterConfig && !$scope.isLocalCluster) {
+//        $scope.configuration[element.name] = '';
+//      }
+//      if(!element.clusterConfig) {
+//        delete $scope.configurationBeforeEdit[element.name];
+//      }
+//    });
   }
 
   // Get META for properties
@@ -143,6 +147,9 @@ angular.module('ambariAdminConsole')
   $scope.cluster = null;
   $scope.noClusterAvailible = true;
 
+  $scope.remoteClusters = [];
+  $scope.remoteCluster = null;
+  loadViewRemoteClusters();
 
   $scope.editSettingsDisabled = true;
   $scope.editDetailsSettingsDisabled = true;
@@ -150,8 +157,8 @@ angular.module('ambariAdminConsole')
   $scope.numberOfSettingsConfigs = 0;
 
   $scope.enableLocalCluster = function() {
-    angular.extend($scope.configuration, $scope.configurationBeforeEdit);
-    $scope.propertiesForm.$setPristine();
+   // angular.extend($scope.configuration, $scope.configurationBeforeEdit);
+   // $scope.propertiesForm.$setPristine();
   };
 
   $scope.disableLocalCluster = function() {
@@ -196,6 +203,21 @@ angular.module('ambariAdminConsole')
     $scope.cluster = $scope.clusters[0];
   });
 
+
+  function loadViewRemoteClusters() {
+    RemoteCluster.all().then(function (clusters){
+     if(clusters.length >0){
+       clusters.forEach(function(cluster) {
+         $scope.remoteClusters.push(cluster.name)
+       });
+       $scope.noRemoteClusterAvailible = false;
+       //$scope.instance.isLocalCluster = $scope.clusterConfigurable;
+       }else{
+         $scope.remoteClusters.push("No Clusters");
+       }
+       $scope.remoteCluster = $scope.remoteClusters[0];
+    });
+  }
 
   $scope.saveSettings = function(callback) {
     if( $scope.settingsForm.$valid ){
@@ -274,16 +296,20 @@ angular.module('ambariAdminConsole')
     filterClusterConfigs();
   };
   $scope.saveConfiguration = function() {
-    if( $scope.propertiesForm.$valid ){
       var data = {
         'ViewInstanceInfo':{
           'properties':{}
         }
       };
+
+      console.log($scope.isLocalCluster);
+
       if($scope.isLocalCluster) {
         data.ViewInstanceInfo.cluster_handle = $scope.cluster;
+        data.ViewInstanceInfo.ambari_managed = true;
       } else {
-        data.ViewInstanceInfo.cluster_handle = null;
+        data.ViewInstanceInfo.cluster_handle = $scope.remoteCluster;
+        data.ViewInstanceInfo.ambari_managed = false;
         $scope.configurationMeta.forEach(function (element) {
           if(element.clusterConfig) {
             data.ViewInstanceInfo.properties[element.name] = $scope.configuration[element.name];
@@ -294,7 +320,7 @@ angular.module('ambariAdminConsole')
       return View.updateInstance($routeParams.viewId, $routeParams.version, $routeParams.instanceId, data)
       .success(function() {
         $scope.editConfigurationDisabled = true;
-        $scope.propertiesForm.$setPristine();
+        //$scope.propertiesForm.$setPristine();
       })
       .catch(function(data) {
         var errorMessage = data.data.message;
@@ -306,25 +332,24 @@ angular.module('ambariAdminConsole')
           try {
             var errorObject = JSON.parse(errorMessage);
             errorMessage = errorObject.detail;
-            angular.forEach(errorObject.propertyResults, function (item, key) {
-              $scope.propertiesForm[key].validationError = !item.valid;
-              if (!item.valid) {
-                $scope.propertiesForm[key].validationMessage = item.detail;
-              }
-            });
+//            angular.forEach(errorObject.propertyResults, function (item, key) {
+//              $scope.propertiesForm[key].validationError = !item.valid;
+//              if (!item.valid) {
+//                $scope.propertiesForm[key].validationMessage = item.detail;
+//              }
+//            });
           } catch (e) {
             console.error('Unable to parse error message:', data.message);
           }
         }
         Alert.error('Cannot save properties', errorMessage);
       });
-    }
   };
   $scope.cancelConfiguration = function() {
     angular.extend($scope.configuration, $scope.configurationBeforeEdit);
     $scope.isLocalCluster = $scope.originalLocalCluster;
     $scope.editConfigurationDisabled = true;
-    $scope.propertiesForm.$setPristine();
+    //$scope.propertiesForm.$setPristine();
   };
 
   // Permissions edit
@@ -372,15 +397,15 @@ angular.module('ambariAdminConsole')
   };
 
   $scope.$on('$locationChangeStart', function(event, targetUrl) {
-    if( $scope.settingsForm.$dirty || $scope.propertiesForm.$dirty){
+    if( $scope.settingsForm.$dirty ){
       UnsavedDialog().then(function(action) {
         targetUrl = targetUrl.split('#').pop();
         switch(action){
           case 'save':
-            if($scope.settingsForm.$valid &&  $scope.propertiesForm.$valid ){
+            if($scope.settingsForm.$valid ){
               $scope.saveSettings(function() {
                 $scope.saveConfiguration().then(function() {
-                  $scope.propertiesForm.$setPristine();
+                  //$scope.propertiesForm.$setPristine();
                   $scope.settingsForm.$setPristine();
                   $location.path(targetUrl);
                 });
@@ -388,7 +413,7 @@ angular.module('ambariAdminConsole')
             }
             break;
           case 'discard':
-            $scope.propertiesForm.$setPristine();
+           // $scope.propertiesForm.$setPristine();
             $scope.settingsForm.$setPristine();
             $location.path(targetUrl);
             break;

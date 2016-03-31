@@ -423,6 +423,9 @@ public class ViewContextImpl implements ViewContext, ViewController {
       if(serviceEntity != null){
         for(ParameterConfig paramConfig : serviceEntity.getConfiguration().getParameters()){
           parameters.put(paramConfig.getName(), paramConfig);
+          if(!properties.containsKey(paramConfig.getName())){
+            properties.put(paramConfig.getName(),paramConfig.getDefaultValue());
+          }
         }
       }
     }

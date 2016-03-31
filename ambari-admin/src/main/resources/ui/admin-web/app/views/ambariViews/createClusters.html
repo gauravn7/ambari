@@ -48,11 +48,14 @@
         </div>
     </div>
 
+    <accordion close-others="false">
     <div ng-repeat="service in instance.services">
-        <div class="panel panel-default">
+        <accordion-group class="panel panel-default">
+            <accordion-heading>
             <div class="panel-heading">
                 <h3 class="panel-title">{{service.name}}</h3>
             </div>
+                </accordion-heading>
             <div class="panel-body property-form">
                 <div class="alert alert-danger bottom-margin top-margin" ng-show='form.remoteclusterform.generalValidationError'>
                     {{form.remoteclusterform.generalValidationError}}
@@ -77,8 +80,9 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </accordion-group>
     </div>
+        </accordion>
 
     <div class="col-sm-12 ">
         <button class="btn btn-primary pull-right left-margin save-button"

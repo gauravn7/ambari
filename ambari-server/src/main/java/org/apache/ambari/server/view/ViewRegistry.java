@@ -836,7 +836,7 @@ public class ViewRegistry {
    * @return the cluster
    */
   public Cluster getCluster(ViewInstanceDefinition viewInstance) {
-    if (viewInstance != null && !viewInstance.isAmbariManaged()) {
+    if (viewInstance != null && viewInstance.isAmbariManaged()) {
       String clusterId = viewInstance.getClusterHandle();
       try {
         return new ClusterImpl(clustersProvider.get().getCluster(clusterId));
@@ -1343,6 +1343,7 @@ public class ViewRegistry {
   // sync a given view instance entity with another given view instance entity
   private void syncViewInstance(ViewInstanceEntity instance1, ViewInstanceEntity instance2) {
     instance1.setLabel(instance2.getLabel());
+    instance1.setAmbariManaged(instance2.isAmbariManaged());
     instance1.setDescription(instance2.getDescription());
     instance1.setVisible(instance2.isVisible());
     instance1.setResource(instance2.getResource());
