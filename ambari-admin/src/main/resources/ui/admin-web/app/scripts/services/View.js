@@ -183,7 +183,7 @@ angular.module('ambariAdminConsole')
 
 //    if(instanceInfo.isLocalCluster) {
       data.cluster_handle = instanceInfo.clusterName;
-      data.ambari_managed= instanceInfo.ambariManaged;
+      data.cluster_type= instanceInfo.clusterType;
 //    } else {
 //      angular.extend(data.properties, properties);
 //    }

@@ -89,5 +89,5 @@ public interface ViewInstanceDefinition {
    */
   public ViewDefinition getViewDefinition();
 
-  public boolean isAmbariManaged();
+  public String getClusterType();
 }

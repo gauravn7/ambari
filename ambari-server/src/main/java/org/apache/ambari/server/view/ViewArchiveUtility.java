@@ -18,9 +18,13 @@
 
 package org.apache.ambari.server.view;
 
+import jline.internal.Log;
+import org.apache.ambari.server.api.services.ViewService;
 import org.apache.ambari.server.view.configuration.ServiceConfig;
 import org.apache.ambari.server.view.configuration.ViewConfig;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -54,7 +58,13 @@ public class ViewArchiveUtility {
   private static final String SERVICE_XML = "service.xml";
   private static final String WEB_INF_VIEW_XML = "WEB-INF/classes/" + VIEW_XML;
   private static final String WEB_INF_SERVICE_XML = "WEB-INF/classes/" + SERVICE_XML;
-  private static final String VIEW_XSD = "view.xsd";
+  public static final String VIEW_XSD = "view.xsd";
+  public static final String SERVCIE_XSD = "view-service.xsd";
+  /**
+   * The logger.
+   */
+  protected final static Logger LOG = LoggerFactory.getLogger(ViewArchiveUtility.class);
+
 
 
   // ----- ViewArchiveUtility ------------------------------------------------
@@ -92,7 +102,7 @@ public class ViewArchiveUtility {
     }
   }
 
-  public void extractServiceConfig(File archiveFile , final String servicePath) throws IOException{
+  public void extractServiceConfigFromArchive(File archiveFile , final String servicePath) throws IOException{
 
     Path path = Paths.get(archiveFile.getAbsolutePath());
     URI uri = URI.create("jar:file:" + path.toUri().getPath());
@@ -110,15 +120,6 @@ public class ViewArchiveUtility {
           }
     });
 
-//    File [] serviceFiles = archiveFile.listFiles( new FileFilter() {
-//      public boolean accept( File file ) {
-//        return file.getName().endsWith("-service.xml");
-//      }
-//    });
-//
-//    for(File file:serviceFiles){
-//      FileUtils.copyFile(file, new File(servicePath + file.getName()));
-//    }
   }
 
   /**
@@ -130,8 +131,7 @@ public class ViewArchiveUtility {
    *
    * @throws JAXBException if xml is malformed
    */
-  public List<ServiceConfig> getServiceConfigFromArchive(String servicePath)
-      throws JAXBException, IOException {
+  public List<ServiceConfig> getServiceConfig(String servicePath, boolean validate) {
 
     List<ServiceConfig> serviceConfigs = new ArrayList<ServiceConfig>();
 
@@ -142,16 +142,26 @@ public class ViewArchiveUtility {
     });
 
     for(File file : serviceFiles){
-      InputStream configStream = new FileInputStream(file);
-
+      InputStream configStream = null;
       try {
+
+        configStream = new FileInputStream(file);
+        if (validate) {
+          validateConfig(new FileInputStream(file),SERVCIE_XSD);
+        }
 
         JAXBContext jaxbContext       = JAXBContext.newInstance(ServiceConfig.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
         serviceConfigs.add((ServiceConfig)jaxbUnmarshaller.unmarshal(configStream));
+      } catch (Exception e){
+        LOG.error("Caught exception reading service :" + file.getName(), e);
       } finally {
-        configStream.close();
+        if(configStream != null) try {
+          configStream.close();
+        } catch (IOException e){
+          LOG.error("Error closing stream :" + file.getName(), e);
+        }
       }
     }
 
@@ -180,7 +190,7 @@ public class ViewArchiveUtility {
     }
 
     if (validate) {
-      validateConfig(new FileInputStream(configFile));
+      validateConfig(new FileInputStream(configFile),VIEW_XSD);
     }
 
     InputStream  configStream = new FileInputStream(configFile);
@@ -239,10 +249,10 @@ public class ViewArchiveUtility {
    * @throws SAXException if the validation fails
    * @throws IOException if the descriptor file can not be read
    */
-  protected void validateConfig(InputStream  configStream) throws SAXException, IOException {
+  protected void validateConfig(InputStream  configStream, String resourceXSD) throws SAXException, IOException {
     SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
-    URL schemaUrl = getClass().getClassLoader().getResource(VIEW_XSD);
+    URL schemaUrl = getClass().getClassLoader().getResource(resourceXSD);
     Schema schema = schemaFactory.newSchema(schemaUrl);
 
     schema.newValidator().validate(new StreamSource(configStream));

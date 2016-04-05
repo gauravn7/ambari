@@ -165,6 +165,12 @@ public class ViewRegistry {
   ViewDAO viewDAO;
 
   /**
+   * View data access object.
+   */
+  @Inject
+  ViewServiceDAO viewServiceDAO;
+
+  /**
    * View instance data access object.
    */
   @Inject
@@ -836,7 +842,7 @@ public class ViewRegistry {
    * @return the cluster
    */
   public Cluster getCluster(ViewInstanceDefinition viewInstance) {
-    if (viewInstance != null && viewInstance.isAmbariManaged()) {
+    if (viewInstance != null && viewInstance.getClusterType().equals(ViewInstanceEntity.AMBARI_MANAGED)) {
       String clusterId = viewInstance.getClusterHandle();
       try {
         return new ClusterImpl(clustersProvider.get().getCluster(clusterId));
@@ -991,7 +997,6 @@ public class ViewRegistry {
       viewParameterEntity.setLabel(parameterConfiguration.getLabel());
       viewParameterEntity.setPlaceholder(parameterConfiguration.getPlaceholder());
       viewParameterEntity.setDefaultValue(parameterConfiguration.getDefaultValue());
-      viewParameterEntity.setClusterConfig(parameterConfiguration.getClusterConfig());
       viewParameterEntity.setRequired(parameterConfiguration.isRequired());
       viewParameterEntity.setMasked(parameterConfiguration.isMasked());
       viewParameterEntity.setViewEntity(viewDefinition);
@@ -1343,7 +1348,7 @@ public class ViewRegistry {
   // sync a given view instance entity with another given view instance entity
   private void syncViewInstance(ViewInstanceEntity instance1, ViewInstanceEntity instance2) {
     instance1.setLabel(instance2.getLabel());
-    instance1.setAmbariManaged(instance2.isAmbariManaged());
+    instance1.setClusterType(instance2.getClusterType());
     instance1.setDescription(instance2.getDescription());
     instance1.setVisible(instance2.isVisible());
     instance1.setResource(instance2.getResource());
@@ -1429,31 +1434,43 @@ public class ViewRegistry {
   }
 
   private void readServiceDefinitions(){
+
+    File viewDir = configuration.getViewsDir();
+    String extractedArchivesPath = viewDir.getAbsolutePath() +
+      File.separator + EXTRACTED_SERVICE_DIR;
+
     try {
-      File viewDir = configuration.getViewsDir();
       File[] files  = viewDir.listFiles();
-      String extractedArchivesPath = viewDir.getAbsolutePath() +
-          File.separator + EXTRACTED_SERVICE_DIR;
 
       if(extractor.ensureExtractedArchiveDirectory(extractedArchivesPath)){
         if (files != null) {
           for (final File archiveFile : files) {
             if (!archiveFile.isDirectory()) {
-              archiveUtility.extractServiceConfig(archiveFile,extractedArchivesPath);
+              archiveUtility.extractServiceConfigFromArchive(archiveFile,extractedArchivesPath);
             }
           }
         }
       }
 
-      for(ServiceConfig serviceConfig : archiveUtility.getServiceConfigFromArchive(extractedArchivesPath)){
-        serviceDefinitions.put(serviceConfig.getName(),new ViewServiceEntity(serviceConfig));
-      }
-
-      LOG.info("Service Definitions size: "+serviceDefinitions.size());
-      LOG.info("Service Definitions: "+serviceDefinitions.keySet());
     }catch (Exception e) {
-      LOG.error("Caught exception reading service in view archives.", e);
+      LOG.error("Caught exception in extracting service from view archives.", e);
     }
+
+    for(ServiceConfig serviceConfig : archiveUtility.getServiceConfig(extractedArchivesPath,
+      configuration.isViewValidationEnabled())){
+      ViewServiceEntity viewService = new ViewServiceEntity(serviceConfig);
+      viewServiceDAO.merge(viewService);
+      serviceDefinitions.put(viewService.getName(),viewService);
+    }
+
+    for(ViewServiceEntity viewService : viewServiceDAO.findAll()){
+      if(!serviceDefinitions.containsKey(viewService.getName())){
+        viewServiceDAO.remove(viewService);
+      }
+    }
+
+    LOG.info("Service Definitions size: "+serviceDefinitions.size());
+    LOG.info("Service Definitions: "+serviceDefinitions.keySet());
 
   }
 

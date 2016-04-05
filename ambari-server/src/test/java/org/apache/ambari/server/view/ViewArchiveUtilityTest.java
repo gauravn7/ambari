@@ -33,6 +33,6 @@ public class ViewArchiveUtilityTest {
 
     InputStream configStream = getClass().getClassLoader().getResourceAsStream("test_view.xml");
 
-    utility.validateConfig(configStream);
+    utility.validateConfig(configStream,ViewArchiveUtility.VIEW_XSD);
   }
 }

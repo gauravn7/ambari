@@ -24,13 +24,13 @@ import javax.persistence.Id;
 /**
  * Composite primary key for ViewParameterEntity.
  */
-public class ViewServiceParameterEntityPK {
+public class ViewServiceMappingEntityPK {
   /**
    * The view name.
    */
   @Id
-  @Column(name = "view_service_name", nullable = false, insertable = false, updatable = false, length = 100)
-  private String viewServiceName;
+  @Column(name = "view_name", nullable = false, insertable = true, updatable = false, length = 100)
+  private String viewName;
 
   /**
    * The parameter name.
@@ -47,17 +47,17 @@ public class ViewServiceParameterEntityPK {
    *
    * @return view name
    */
-  public String getViewServiceName() {
-    return viewServiceName;
+  public String getViewName() {
+    return viewName;
   }
 
   /**
    * Set the name of the associated view.
    *
-   * @param viewServiceName  view name
+   * @param viewName  view name
    */
-  public void setViewServiceName(String viewServiceName) {
-    this.viewServiceName = viewServiceName;
+  public void setViewName(String viewName) {
+    this.viewName = viewName;
   }
 
   /**
@@ -86,14 +86,14 @@ public class ViewServiceParameterEntityPK {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    ViewServiceParameterEntityPK that = (ViewServiceParameterEntityPK) o;
+    ViewServiceMappingEntityPK that = (ViewServiceMappingEntityPK) o;
 
-    return this.viewServiceName.equals(that.viewServiceName) &&
+    return this.viewName.equals(that.viewName) &&
         this.name.equals(that.name);
   }
 
   @Override
   public int hashCode() {
-    return 31 * viewServiceName.hashCode() + name.hashCode();
+    return 31 * viewName.hashCode() + name.hashCode();
   }
 }

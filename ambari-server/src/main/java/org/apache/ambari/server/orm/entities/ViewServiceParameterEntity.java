@@ -84,7 +84,7 @@ public class ViewServiceParameterEntity {
   private char masked;
 
   @ManyToOne
-  @JoinColumn(name = "view_service_name", referencedColumnName = "view_service_name", nullable = false)
+  @JoinColumn(name = "view_service_name", referencedColumnName = "name", nullable = false)
   private ViewServiceEntity viewservice;
 
 

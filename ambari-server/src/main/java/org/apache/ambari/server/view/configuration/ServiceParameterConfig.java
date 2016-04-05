@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlElement;
  * View parameter configuration.
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ParameterConfig {
+public class ServiceParameterConfig {
   /**
    * The parameter name.
    */
@@ -52,6 +52,12 @@ public class ParameterConfig {
    */
   @XmlElement(name="default-value")
   private String defaultValue;
+
+  /**
+   * The parameter cluster configuration id value.
+   */
+  @XmlElement(name="cluster-config")
+  private String clusterConfig;
 
   /**
    * Indicates whether or not the parameter is required.
@@ -106,6 +112,15 @@ public class ParameterConfig {
    */
   public String getDefaultValue() {
     return defaultValue;
+  }
+
+  /**
+   * Get the cluster configuration id used to pull configuration from an associated Ambari cluster.
+   *
+   * @return the cluster configuration id
+   */
+  public String getClusterConfig() {
+    return clusterConfig;
   }
 
   /**

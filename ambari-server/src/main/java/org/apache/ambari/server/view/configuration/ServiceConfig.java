@@ -31,14 +31,38 @@ public class ServiceConfig {
   @XmlElement(name="name")
   private String name;
 
+  @XmlElement(name="version")
+  private String version;
+
+  /**
+   * The minimum Ambari version.
+   */
+  @XmlElement(name="min-ambari-version")
+  private String minAmbariVersion;
+
+  /**
+   * The maximum Ambari version.
+   */
+  @XmlElement(name="max-ambari-version")
+  private String maxAmbariVersion;
+
+
   @XmlElement(name="parameter")
-  private List<ParameterConfig> parameters;
+  private List<ServiceParameterConfig> parameters;
 
   public String getName() {
     return name;
   }
 
-  public List<ParameterConfig> getParameters() {
+  public String getServiceName(){
+    return name + "{" + version + "}" ;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public List<ServiceParameterConfig> getParameters() {
     return parameters;
   }
 }

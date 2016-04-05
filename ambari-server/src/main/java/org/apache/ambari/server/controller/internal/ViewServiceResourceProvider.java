@@ -34,6 +34,7 @@ public class ViewServiceResourceProvider extends AbstractResourceProvider{
    * View property id constants.
    */
   public static final String SERVICE_NAME_PROPERTY_ID    = "serviceInfo/name";
+  public static final String SERVICE_COMMON_NAME_PROPERTY_ID    = "serviceInfo/commonName";
   public static final String SERVICE_PARAMETER_PROPERTY_ID    = "serviceInfo/parameters";
 
 
@@ -52,6 +53,7 @@ public class ViewServiceResourceProvider extends AbstractResourceProvider{
   static {
     propertyIds.add(SERVICE_NAME_PROPERTY_ID);
     propertyIds.add(SERVICE_PARAMETER_PROPERTY_ID);
+    propertyIds.add(SERVICE_COMMON_NAME_PROPERTY_ID);
   }
 
 
@@ -93,6 +95,7 @@ public class ViewServiceResourceProvider extends AbstractResourceProvider{
           Resource resource = new ResourceImpl(Resource.Type.ViewService);
           setResourceProperty(resource, SERVICE_NAME_PROPERTY_ID, sg.getName() , requestedIds);
           setResourceProperty(resource, SERVICE_PARAMETER_PROPERTY_ID, sg.getConfiguration().getParameters() , requestedIds);
+          setResourceProperty(resource, SERVICE_COMMON_NAME_PROPERTY_ID, sg.getConfiguration().getName() , requestedIds);
           resources.add(resource);
         }
       }

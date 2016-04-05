@@ -143,7 +143,10 @@ angular.module('ambariAdminConsole')
     if($scope.form.instanceCreateForm.$valid){
       $scope.form.instanceCreateForm.isSaving = true;
       $scope.instance.clusterName = $scope.instance.isLocalCluster ? $scope.cluster : $scope.remoteCluster;
-      $scope.instance.ambariManaged = $scope.instance.isLocalCluster;
+      $scope.instance.clusterType = "STANDALONE";
+      if($scope.instance.isLocalCluster){
+        $scope.instance.clusterType = "AMBARI";
+      }
       View.createInstance($scope.instance)
         .then(function(data) {
           Alert.success('Created View Instance ' + $scope.instance.instance_name);

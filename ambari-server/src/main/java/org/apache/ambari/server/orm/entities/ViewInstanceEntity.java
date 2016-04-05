@@ -82,6 +82,10 @@ import org.apache.ambari.view.validation.ValidationResult;
 @Entity
 public class ViewInstanceEntity implements ViewInstanceDefinition {
 
+  public static final String AMBARI_MANAGED = "AMBARI";
+  public static final String AMBARI_REMOTE_MANAGED = "AMBARI_REMOTE";
+  public static final String STANDALONE = "STANDALONE";
+
   @Id
   @Column(name = "view_instance_id", nullable = false)
   @GeneratedValue(strategy = GenerationType.TABLE, generator = "view_instance_id_generator")
@@ -116,8 +120,8 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
   @Column(name = "cluster_handle", nullable = true)
   private String clusterHandle;
 
-  @Column(name = "ambari_managed", nullable = false)
-  private char ambariManaged;
+  @Column(name = "cluster_type", nullable = false)
+  private String clusterType;
 
 
   /**
@@ -238,7 +242,6 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
     this.clusterHandle = null;
     this.visible = instanceConfig.isVisible() ? 'Y' : 'N';
     this.alterNames = 1;
-    this.ambariManaged = 'N';
 
     String label = instanceConfig.getLabel();
     this.label = (label == null || label.length() == 0) ? view.getLabel() : label;
@@ -275,7 +278,6 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
     this.description = null;
     this.clusterHandle = null;
     this.visible = 'Y';
-    this.ambariManaged = 'N';
     this.alterNames = 1;
     this.label = label;
   }
@@ -343,9 +345,11 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
     return clusterHandle;
   }
 
-  public boolean isAmbariManaged() {
-    return ambariManaged == 'y' || ambariManaged == 'Y';
+  @Override
+  public String getClusterType() {
+    return clusterType;
   }
+
 
   @Override
   public boolean isVisible() {
@@ -429,8 +433,8 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
     this.clusterHandle = clusterHandle;
   }
 
-  public void setAmbariManaged(boolean ambariManaged) {
-    this.ambariManaged = (ambariManaged ? 'Y' : 'N');
+  public void setClusterType(String clusterType) {
+    this.clusterType = clusterType;
   }
 
   /**

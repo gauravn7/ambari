@@ -20,9 +20,17 @@ package org.apache.ambari.server.orm.entities;
 
 import org.apache.ambari.server.view.configuration.ParameterConfig;
 import org.apache.ambari.server.view.configuration.ServiceConfig;
+import org.apache.ambari.server.view.configuration.ServiceParameterConfig;
 import org.apache.ambari.server.view.configuration.ViewConfig;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -30,6 +38,8 @@ import java.util.HashSet;
  * Represents a service config.
  */
 @Table(name = "viewservice")
+@NamedQuery(name = "allViewServices",
+  query = "SELECT viewService FROM ViewServiceEntity viewService")
 @Entity
 public class ViewServiceEntity {
 
@@ -37,7 +47,7 @@ public class ViewServiceEntity {
    * The service name.
    */
   @Id
-  @Column(name = "name", nullable = false, insertable = false, updatable = false)
+  @Column(name = "name", nullable = false, insertable = true, updatable = false)
   private String name;
 
   /**
@@ -57,12 +67,16 @@ public class ViewServiceEntity {
     this.name = name;
   }
 
-  public ViewServiceEntity(ServiceConfig sc) {
-    this.name = sc.getName();
-    this.configuration = sc;
-    for (ParameterConfig parameterConfiguration : sc.getParameters()) {
-      ViewServiceParameterEntity viewParameterEntity =  new ViewServiceParameterEntity();
+  public ViewServiceEntity() {
+  }
 
+  public ViewServiceEntity(ServiceConfig configuration) {
+    this.name =  configuration.getName() + "{" + configuration.getVersion() + "}";
+    this.configuration = configuration;
+
+    for (ServiceParameterConfig parameterConfiguration : configuration.getParameters()) {
+
+      ViewServiceParameterEntity viewParameterEntity =  new ViewServiceParameterEntity();
       viewParameterEntity.setViewServiceName(name);
       viewParameterEntity.setName(parameterConfiguration.getName());
       viewParameterEntity.setDescription(parameterConfiguration.getDescription());

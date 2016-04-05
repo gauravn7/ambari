@@ -28,6 +28,7 @@ import org.apache.ambari.server.orm.entities.ViewInstanceEntity;
 import org.apache.ambari.server.orm.entities.ViewServiceEntity;
 import org.apache.ambari.server.orm.entities.ViewServiceParameterEntity;
 import org.apache.ambari.server.view.configuration.ParameterConfig;
+import org.apache.ambari.server.view.configuration.ServiceParameterConfig;
 import org.apache.ambari.server.view.configuration.ViewConfig;
 import org.apache.ambari.server.view.events.EventImpl;
 import org.apache.ambari.server.view.persistence.DataStoreImpl;
@@ -411,17 +412,18 @@ public class ViewContextImpl implements ViewContext, ViewController {
     Map<String, String> properties = new HashMap<String,String>();
 
     ViewClusterConfigurationEntity viewClusterConfig =  viewRegistry.getViewClusterConfiguration(viewInstanceEntity.getClusterHandle());
-    if(!viewInstanceEntity.isAmbariManaged() && viewClusterConfig != null){
+    if(viewInstanceEntity.getClusterType()
+      .equals(ViewInstanceEntity.STANDALONE) && viewClusterConfig != null){
       properties.putAll(viewClusterConfig.getPropertyMap());
     }
     properties.putAll(viewInstanceEntity.getPropertyMap());
 
-    Map<String, ParameterConfig> parameters = new HashMap<String, ParameterConfig>();
+    Map<String, ServiceParameterConfig> parameters = new HashMap<String, ServiceParameterConfig>();
 
     for (String service : viewEntity.getConfiguration().getServices()) {
       ViewServiceEntity serviceEntity = viewRegistry.getServiceDefinition(service);
       if(serviceEntity != null){
-        for(ParameterConfig paramConfig : serviceEntity.getConfiguration().getParameters()){
+        for(ServiceParameterConfig paramConfig : serviceEntity.getConfiguration().getParameters()){
           parameters.put(paramConfig.getName(), paramConfig);
           if(!properties.containsKey(paramConfig.getName())){
             properties.put(paramConfig.getName(),paramConfig.getDefaultValue());
@@ -436,7 +438,7 @@ public class ViewContextImpl implements ViewContext, ViewController {
       String propertyName  = entry.getKey();
       String propertyValue = entry.getValue();
 
-      ParameterConfig parameterConfig = parameters.get(propertyName);
+      ServiceParameterConfig parameterConfig = parameters.get(propertyName);
 
       if (parameterConfig != null) {
 
