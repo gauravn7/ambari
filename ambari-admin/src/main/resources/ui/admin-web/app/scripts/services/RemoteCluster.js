@@ -23,6 +23,7 @@ angular.module('ambariAdminConsole')
   function RemoteClusterServiceConfigurations(item){
      var self = this;
      self.name = item.serviceInfo.name;
+     self.commonName = item.serviceInfo.commonName;
      self.parameters = item.serviceInfo.parameters;
   }
 
@@ -31,6 +32,12 @@ angular.module('ambariAdminConsole')
       self.name = item.ViewClusterInstanceInfo.name;
       self.services = item.ViewClusterInstanceInfo.services;
     }
+
+  function ViewService(item){
+    var self = this;
+    self.name = item.ViewVersionInfo.view_name + '{' + item.ViewVersionInfo.version + '}';
+    self.services = item.ViewVersionInfo.services;
+  }
 
   RemoteCluster.all = function(){
     var deferred = $q.defer();
@@ -61,7 +68,8 @@ angular.module('ambariAdminConsole')
   RemoteCluster.getConfigurations = function(){
       var deferred = $q.defer();
       var fields = [
-            'serviceInfo/parameters',
+            'serviceInfo/commonName',
+            'serviceInfo/parameters'
           ];
 
         $http({
@@ -92,30 +100,29 @@ angular.module('ambariAdminConsole')
   };
 
 
-  RemoteCluster.createInstance = function(instanceInfo,isUpdate) {
+  RemoteCluster.createInstance = function(data,isUpdate) {
     var deferred = $q.defer();
-
-    var services = [];
-
-    angular.forEach(instanceInfo.services, function(item) {
-      var properties = {};
-      angular.forEach(item.parameters, function(property) {
-          console.log(property);
-          properties[property.name] = property.value;
-      });
-
-      var service = {
-        'name' : item.name,
-        'properties': properties
-      };
-
-      services.push(service);
-    });
-
-    var data = {
-      'name' : instanceInfo.name,
-      'services': services
-    };
+//
+//    var services = [];
+//
+//    angular.forEach(instanceInfo.services, function(item) {
+//      var properties = {};
+//      angular.forEach(item.parameters, function(property) {
+//          properties[property.name] = property.value;
+//      });
+//
+//      var service = {
+//        'name' : item.name,
+//        'properties': properties
+//      };
+//
+//      services.push(service);
+//    });
+//
+//    var data = {
+//      'name' : instanceInfo.name,
+//      'services': services
+//    };
 
     var method = isUpdate ? 'PUT' : 'POST'
 
@@ -128,6 +135,36 @@ angular.module('ambariAdminConsole')
     })
     .success(function(data) {
       deferred.resolve(data);
+    })
+    .error(function(data) {
+      deferred.reject(data);
+    });
+
+    return deferred.promise;
+  };
+
+  RemoteCluster.getViewServices = function(){
+    var deferred = $q.defer();
+    var fields = [
+      'versions/ViewVersionInfo/version',
+      'versions/ViewVersionInfo/services'
+    ];
+
+    $http({
+      method: 'GET',
+      url: Settings.baseUrl + '/views',
+      params:{
+        'fields': fields.join(','),
+        'versions/ViewVersionInfo/system': false
+      }
+    }).success(function(data) {
+      var views = [];
+      angular.forEach(data.items, function(item) {
+        angular.forEach(item.versions , function(view){
+          views.push(new ViewService(view));
+        });
+      });
+      deferred.resolve(views);
     })
     .error(function(data) {
       deferred.reject(data);

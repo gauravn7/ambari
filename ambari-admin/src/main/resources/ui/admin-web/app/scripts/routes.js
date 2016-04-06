@@ -90,13 +90,15 @@ angular.module('ambariAdminConsole')
     },
     edit: {
           url:'/remoteclusters/:clusterName/edit',
-          templateUrl: 'views/ambariViews/editClusters.html',
-          controller: 'RemoteClusterEditCtrl'
+          templateUrl: 'views/ambariViews/createClusters.html',
+          controller: 'RemoteClusterInstanceCtrl',
+          isEditPage : true
         },
     create: {
               url:'/remoteclusters/create',
               templateUrl: 'views/ambariViews/createClusters.html',
-              controller: 'RemoteClusterInstanceCtrl'
+              controller: 'RemoteClusterInstanceCtrl',
+              isEditPage:false
             }
 
   },
