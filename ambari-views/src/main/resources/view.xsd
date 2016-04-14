@@ -337,6 +337,11 @@
             <xs:documentation>The Masker class for masking view parameters.</xs:documentation>
           </xs:annotation>
         </xs:element>
+        <xs:element type="xs:string" name="service" minOccurs="0" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:documentation>The Services on which view depends.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
         <xs:element type="ParameterType" name="parameter" minOccurs="0" maxOccurs="unbounded">
           <xs:annotation>
             <xs:documentation>Defines a configuration parameter that is used to when creating a view instance.

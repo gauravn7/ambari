@@ -353,6 +353,11 @@ public class ViewConfigTest {
     public ValidationResult validateProperty(String property, ViewInstanceDefinition definition, ValidationContext mode) {
       return result;
     }
+
+    @Override
+    public ValidationResult validateProperty(String property, String value, ValidationContext mode) {
+      return result;
+    }
   }
 
   public static class MyResource {

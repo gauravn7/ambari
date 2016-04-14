@@ -20,11 +20,18 @@ package org.apache.ambari.server.controller.internal;
 
 import com.google.inject.persist.Transactional;
 import org.apache.ambari.server.AmbariException;
+import org.apache.ambari.server.DuplicateResourceException;
 import org.apache.ambari.server.controller.spi.*;
 import org.apache.ambari.server.orm.entities.ViewClusterConfigurationEntity;
 import org.apache.ambari.server.orm.entities.ViewClusterServiceEntity;
+import org.apache.ambari.server.orm.entities.ViewServiceEntity;
+import org.apache.ambari.server.orm.entities.ViewServiceParameterEntity;
+import org.apache.ambari.server.view.DefaultMasker;
 import org.apache.ambari.server.view.ViewRegistry;
+import org.apache.ambari.view.MaskException;
+import org.apache.ambari.view.Masker;
 
+import java.security.AccessControlException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,7 +42,7 @@ import java.util.Set;
 /**
  *  Resource provider for view cluster instances.
  */
-public class ViewClusterInstanceProvider extends AbstractResourceProvider{
+public class ViewClusterInstanceResourceProvider extends AbstractResourceProvider{
 
   /**
    * View instance property id constants.
@@ -65,14 +72,15 @@ public class ViewClusterInstanceProvider extends AbstractResourceProvider{
     propertyIds.add(VIEW_CLUSTER_SERVICE_PROPERTY_ID);
   }
 
+  private Masker masker = new DefaultMasker();
 
-  public ViewClusterInstanceProvider() {
+  public ViewClusterInstanceResourceProvider() {
     super(propertyIds, keyPropertyIds);
   }
 
   @Override
   protected Set<String> getPKPropertyIds() {
-    return null;
+    return propertyIds;
   }
 
   @Override
@@ -124,7 +132,7 @@ public class ViewClusterInstanceProvider extends AbstractResourceProvider{
 
   @Override
   public RequestStatus deleteResources(Predicate predicate) throws SystemException, UnsupportedPropertyException, NoSuchResourceException, NoSuchParentResourceException {
-    return null;
+    throw new UnsupportedOperationException("Not yet supported.");
   }
 
   // Create a create command with all properties set.
@@ -133,31 +141,16 @@ public class ViewClusterInstanceProvider extends AbstractResourceProvider{
       @Transactional
       @Override
       public Void invoke() throws AmbariException {
-        try {
+        try{
           ViewRegistry viewRegistry   = ViewRegistry.getInstance();
           ViewClusterConfigurationEntity clusterEntity = toEntity(properties, false);
+
+          if(viewRegistry.getViewClusterConfiguration(clusterEntity.getName()) != null){
+            throw new DuplicateResourceException("The instance " + clusterEntity.getName() + " already exists.");
+          }
+
           viewRegistry.addViewClusterConfiguration(clusterEntity);
-//          ViewEntity viewEntity = instanceEntity.getViewEntity();
-//          String     viewName   = viewEntity.getCommonName();
-//          String     version    = viewEntity.getVersion();
-//          ViewEntity view       = viewRegistry.getDefinition(viewName, version);
-//
-//          if ( view == null ) {
-//            throw new IllegalStateException("The view " + viewName + " is not registered.");
-//          }
-//
-//          // the view must be in the DEPLOYED state to create an instance
-//          if (!view.isDeployed()) {
-//            throw new IllegalStateException("The view " + viewName + " is not loaded.");
-//          }
-//
-//          if (viewRegistry.instanceExists(instanceEntity)) {
-//            throw new DuplicateResourceException("The instance " + instanceEntity.getName() + " already exists.");
-//          }
-//          viewRegistry.installViewInstance(instanceEntity);
-//        } catch (org.apache.ambari.view.SystemException e) {
-//          throw new AmbariException("Caught exception trying to create view instance.", e);
-        } catch (Exception e) {
+        }catch (MaskException e) {
           // results in a BAD_REQUEST (400) response for the validation failure.
           throw new IllegalArgumentException(e.getMessage(), e);
         }
@@ -200,7 +193,7 @@ public class ViewClusterInstanceProvider extends AbstractResourceProvider{
     return resource;
   }
 
-  private ViewClusterConfigurationEntity toEntity(Map<String, Object> properties,boolean update) {
+  private ViewClusterConfigurationEntity toEntity(Map<String, Object> properties,boolean update) throws IllegalArgumentException, MaskException {
     String name = (String) properties.get(VIEW_CLUSTER_NAME_PROPERTY_ID);
     if (name == null || name.isEmpty()) {
       throw new IllegalArgumentException("View Cluster instance name must be provided");
@@ -221,26 +214,39 @@ public class ViewClusterInstanceProvider extends AbstractResourceProvider{
 
     cluster.clearServices();
 
-    Boolean isUserAdmin = viewRegistry.checkAdmin();
-
     for(Map<String,Object> serviceMap : (Set<Map<String,Object>>)properties.get(VIEW_CLUSTER_SERVICE_PROPERTY_ID)){
       String serviceName = (String)serviceMap.get(VIEW_CLUSTER_SERVICE_NAME_PROPERTY_ID);
+
+      ViewServiceEntity serviceEntity = viewRegistry.getServiceDefinition(serviceName);
 
       if (name == null || name.isEmpty()) {
         throw new IllegalArgumentException("View Cluster Service name must be provided");
       }
 
+      if(serviceEntity == null) {
+        throw new IllegalArgumentException("Invalid view service name");
+      }
+
+      Map<String,ViewServiceParameterEntity> parameterMap = new HashMap<String, ViewServiceParameterEntity>();
+
+      for(ViewServiceParameterEntity parameter : serviceEntity.getParameters()){
+        parameterMap.put(parameter.getName(),parameter);
+      }
+
       ViewClusterServiceEntity service = new ViewClusterServiceEntity();
       service.setName(serviceName);
-      service.setClusterName(name);
-      service.setClusterConfiguration(cluster);
 
       for (Map.Entry<String, Object> entry : serviceMap.entrySet()) {
         String propertyName = entry.getKey();
         if (propertyName.startsWith(PROPERTIES_PREFIX)) {
-          if (isUserAdmin) {
-            service.putProperty(entry.getKey().substring(PROPERTIES_PREFIX.length()), (String) entry.getValue());
+          String key = entry.getKey().substring(PROPERTIES_PREFIX.length());
+          String value = (String) entry.getValue();
+
+          ViewServiceParameterEntity parameter = parameterMap.get(key);
+          if(parameter != null && parameter.isMasked()){
+            value = masker.mask(value);
           }
+          service.putProperty(key,value);
         }
       }
 

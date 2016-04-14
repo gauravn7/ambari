@@ -99,7 +99,7 @@
       <h3 class="panel-title">Settings</h3>
     </div>
     <div class="panel-body">
-      <div class="form-group" ng-repeat="parameter in instance.properties | filter:{clusterConfig:false}"
+      <div class="form-group" ng-repeat="parameter in instance.properties"
            ng-class="{'has-error' : ((form.instanceCreateForm[parameter.name].$error.required && form.instanceCreateForm.submitted) || form.instanceCreateForm[parameter.name].validationError)}" >
         <label for="" class="col-sm-3 control-label" ng-class="{'not-required': !parameter.required}">{{parameter.label || parameter.displayName}}{{parameter.required ? '*' : ''}}</label>
         <div ng-switch="parameter.type">
@@ -120,7 +120,7 @@
     </div>
   </div>
 
-  <div class="panel panel-default" >
+  <div class="panel panel-default">
     <div class="panel-heading">
       <h3 class="panel-title">Cluster Configuration</h3>
     </div>
@@ -145,10 +145,10 @@
       </div>
 
     </div>
-    <div class="panel-body property-form">
+    <div class="panel-body property-form" popover="{{clusterConfigurableErrorMsg}}">
       <div class="checkbox">
         <label>
-          <input type="radio" ng-model="instance.isLocalCluster" ng-value="false" class="visibilityCheckbox"> Remote Cluster
+          <input type="radio" ng-disabled="!clusterConfigurable || noRemoteClusterAvailible" ng-model="instance.isLocalCluster" ng-value="false" class="visibilityCheckbox"> Remote Cluster
         </label>
       </div>
       <div class="form-horizontal property-form">
@@ -157,8 +157,11 @@
         <label for="" class="control-label col-sm-3 ng-binding not-required" >Cluster Name</label>
         <div>
           <div class="col-sm-9">
-            <select ng-model="remoteCluster" ng-disabled="instance.isLocalCluster" ng-change="onClusterChange()" class="clusters-name-dropdown form-control"  ng-options="o as o for o in remoteClusters"></select>
+            <select ng-model="remoteCluster" ng-disabled="!clusterConfigurable || instance.isLocalCluster" class="clusters-name-dropdown form-control"  ng-options="o as o for o in remoteClusters" ng-change="onRemoteClusterChange()"></select>
           </div>
+        </div>
+        <div class="col-sm-12">
+          {{remoteClusterErrorMsg}}
         </div>
       </div>
     </div>

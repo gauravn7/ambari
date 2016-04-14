@@ -35,28 +35,22 @@ public class PropertyValidator implements Validator {
 
   @Override
   public ValidationResult validateProperty(String property, ViewInstanceDefinition viewInstanceDefinition, ValidationContext validationContext) {
-    // 1. Validate non cluster associated properties
-    // no properties
+    return null;
+  }
 
-    // 2. if associated with cluster, no need to validate associated properties
-    String cluster = viewInstanceDefinition.getClusterHandle();
-    if (cluster != null) {
-      return ValidationResult.SUCCESS;
-    }
-
+  @Override
+  public ValidationResult validateProperty(String property, String value, ValidationContext mode) {
     // 3. Cluster associated properties
     if (property.equals(WEBHDFS_URL)) {
-      String webhdfsUrl = viewInstanceDefinition.getPropertyMap().get(WEBHDFS_URL);
-      if (!ValidatorUtils.validateHdfsURL(webhdfsUrl)) {
+      if (!ValidatorUtils.validateHdfsURL(value)) {
         return new InvalidPropertyValidationResult(false, "Must be valid URL");
       }
     }
 
     if (property.equals(WEBHCAT_PORT)) {
-      String webhcatPort = viewInstanceDefinition.getPropertyMap().get(WEBHCAT_PORT);
-      if (webhcatPort != null) {
+      if (value != null) {
         try {
-          int port = Integer.valueOf(webhcatPort);
+          int port = Integer.valueOf(value);
           if (port < 1 || port > 65535) {
             return new InvalidPropertyValidationResult(false, "Must be from 1 to 65535");
           }

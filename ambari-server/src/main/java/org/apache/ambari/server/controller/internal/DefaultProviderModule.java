@@ -65,7 +65,7 @@ public class DefaultProviderModule extends AbstractProviderModule {
       case View:
         return new ViewResourceProvider();
       case ViewClusterInstance:
-        return new ViewClusterInstanceProvider();
+        return new ViewClusterInstanceResourceProvider();
       case ViewService:
         return new ViewServiceResourceProvider();
       case ViewVersion:

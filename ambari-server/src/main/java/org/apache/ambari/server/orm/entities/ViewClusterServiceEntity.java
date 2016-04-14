@@ -114,4 +114,24 @@ public class ViewClusterServiceEntity {
     this.properties = properties;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    ViewClusterServiceEntity that = (ViewClusterServiceEntity) o;
+
+    if (name != null ? !name.equals(that.name) : that.name != null) return false;
+    if (clusterName != null ? !clusterName.equals(that.clusterName) : that.clusterName != null) return false;
+    return !(properties != null ? !properties.equals(that.properties) : that.properties != null);
+
+  }
+
+  @Override
+  public int hashCode() {
+    int result = name != null ? name.hashCode() : 0;
+    result = 31 * result + (clusterName != null ? clusterName.hashCode() : 0);
+    result = 31 * result + (properties != null ? properties.hashCode() : 0);
+    return result;
+  }
 }

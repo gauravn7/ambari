@@ -221,6 +221,7 @@ public class ViewInstanceResourceProvider extends AbstractResourceProvider {
   protected Resource toResource(ViewInstanceEntity viewInstanceEntity, Set<String> requestedIds) {
     Resource   resource   = new ResourceImpl(Resource.Type.ViewInstance);
     ViewEntity viewEntity = viewInstanceEntity.getViewEntity();
+    ViewRegistry  viewRegistry = ViewRegistry.getInstance();
 
     String viewName = viewEntity.getCommonName();
     String version  = viewEntity.getVersion();
@@ -266,7 +267,8 @@ public class ViewInstanceResourceProvider extends AbstractResourceProvider {
           isPropertyRequested(PROPERTY_VALIDATION_RESULTS_PROPERTY_ID, requestedIds)) {
 
         InstanceValidationResultImpl result =
-            viewInstanceEntity.getValidationResult(viewEntity, Validator.ValidationContext.EXISTING);
+            viewInstanceEntity.getValidationResult(viewEntity,
+              Validator.ValidationContext.EXISTING,viewRegistry.getClusterProperties(viewInstanceEntity));
 
         setResourceProperty(resource, VALIDATION_RESULT_PROPERTY_ID, ValidationResultImpl.create(result), requestedIds);
         setResourceProperty(resource, PROPERTY_VALIDATION_RESULTS_PROPERTY_ID, result.getPropertyResults(), requestedIds);
@@ -326,11 +328,11 @@ public class ViewInstanceResourceProvider extends AbstractResourceProvider {
 
     String clusterType = (String) properties.get(CLUSTER_TYPE_PROPERTY_ID);
 
-    if(clusterType == null) {
+    if(clusterType == null && !update) {
       throw new IllegalArgumentException("Cluster Type for " + viewName + " does not exist.");
     }
 
-    viewInstanceEntity.setClusterType(clusterType);
+    if(clusterType!=null) viewInstanceEntity.setClusterType(clusterType);
 
     if (properties.containsKey(ICON_PATH_ID)) {
       viewInstanceEntity.setIcon((String) properties.get(ICON_PATH_ID));

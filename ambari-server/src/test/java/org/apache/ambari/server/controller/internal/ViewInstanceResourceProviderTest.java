@@ -118,6 +118,7 @@ public class ViewInstanceResourceProviderTest {
     propertyMap.put(ViewInstanceResourceProvider.VIEW_NAME_PROPERTY_ID, "V1");
     propertyMap.put(ViewInstanceResourceProvider.VIEW_VERSION_PROPERTY_ID, "1.0.0");
     propertyMap.put(ViewInstanceResourceProvider.INSTANCE_NAME_PROPERTY_ID, "I1");
+    propertyMap.put(ViewInstanceResourceProvider.CLUSTER_TYPE_PROPERTY_ID, ViewInstanceEntity.AMBARI_MANAGED);
     propertyMap.put(ViewInstanceResourceProvider.PROPERTIES_PROPERTY_ID + "/test_property", "test_value");
 
     properties.add(propertyMap);
@@ -183,6 +184,7 @@ public class ViewInstanceResourceProviderTest {
     propertyMap.put(ViewInstanceResourceProvider.VIEW_NAME_PROPERTY_ID, "V1");
     propertyMap.put(ViewInstanceResourceProvider.VIEW_VERSION_PROPERTY_ID, "1.0.0");
     propertyMap.put(ViewInstanceResourceProvider.INSTANCE_NAME_PROPERTY_ID, "I1");
+    propertyMap.put(ViewInstanceResourceProvider.CLUSTER_TYPE_PROPERTY_ID, ViewInstanceEntity.AMBARI_MANAGED);
 
     properties.add(propertyMap);
 
@@ -225,6 +227,7 @@ public class ViewInstanceResourceProviderTest {
     propertyMap.put(ViewInstanceResourceProvider.VIEW_NAME_PROPERTY_ID, "V1");
     propertyMap.put(ViewInstanceResourceProvider.VIEW_VERSION_PROPERTY_ID, "1.0.0");
     propertyMap.put(ViewInstanceResourceProvider.INSTANCE_NAME_PROPERTY_ID, "I1");
+    propertyMap.put(ViewInstanceResourceProvider.CLUSTER_TYPE_PROPERTY_ID, ViewInstanceEntity.AMBARI_MANAGED);
 
     properties.add(propertyMap);
 

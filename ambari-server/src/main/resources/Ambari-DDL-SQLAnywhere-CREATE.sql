@@ -456,6 +456,7 @@ CREATE TABLE viewinstance (
   xml_driven CHAR(1),
   alter_names BIT NOT NULL DEFAULT 1,
   cluster_handle VARCHAR(255),
+  cluster_type VARCHAR(255),
   PRIMARY KEY(view_instance_id));
 
 CREATE TABLE viewinstanceproperty (
@@ -472,7 +473,6 @@ CREATE TABLE viewparameter (
   label VARCHAR(255),
   placeholder VARCHAR(255),
   default_value VARCHAR(2000),
-  cluster_config VARCHAR(255),
   required CHAR(1),
   masked CHAR(1),
   PRIMARY KEY(view_name, name));
@@ -1243,4 +1243,41 @@ CREATE TABLE clusterEvent (
   service TEXT, status TEXT,
   error TEXT, data TEXT ,
   host TEXT, rack TEXT
+);
+
+CREATE TABLE viewclusterconfiguration (
+  name VARCHAR(255) NOT NULL,
+  PRIMARY KEY(name)
+);
+
+CREATE TABLE viewclusterservice (
+  cluster_name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  PRIMARY KEY(cluster_name, name)
+);
+
+CREATE TABLE viewclusterproperty (
+  cluster_name VARCHAR(255) NOT NULL,
+  service_name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  value VARCHAR(2000),
+  PRIMARY KEY(cluster_name,service_name,name)
+);
+
+CREATE TABLE viewservice (
+  name VARCHAR(255) NOT NULL,
+  PRIMARY KEY(name)
+);
+
+CREATE TABLE viewserviceparameter (
+  view_service_name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description VARCHAR(2048),
+  label VARCHAR(255),
+  placeholder VARCHAR(255),
+  default_value VARCHAR(2000),
+  cluster_config VARCHAR(255),
+  required CHAR(1),
+  masked CHAR(1),
+  PRIMARY KEY(view_service_name, name)
 );

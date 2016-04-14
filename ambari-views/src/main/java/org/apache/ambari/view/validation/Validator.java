@@ -49,6 +49,18 @@ public interface Validator {
   public ValidationResult validateProperty(String property, ViewInstanceDefinition definition, ValidationContext mode);
 
   /**
+   * Validate a property of the given value.  Return {@code null} to indicate that
+   * no validation was performed.
+   *
+   * @param property    the property name
+   * @param value       value of property
+   * @param mode        the validation mode
+   *
+   * @return the instance validation result; may be {@code null}
+   */
+  public ValidationResult validateProperty(String property, String value, ValidationContext mode);
+
+  /**
    * The context in which a view instance validation check is performed.
    */
   public enum ValidationContext {

@@ -39,7 +39,7 @@ public class ViewServiceResourceProvider extends AbstractResourceProvider{
 
 
   /**
-   * The key property ids for a view resource.
+   * The key property ids for a view service resource.
    */
   private static Map<Resource.Type, String> keyPropertyIds = new HashMap<Resource.Type, String>();
   static {
@@ -47,7 +47,7 @@ public class ViewServiceResourceProvider extends AbstractResourceProvider{
   }
 
   /**
-   * The property ids for a view resource.
+   * The property ids for a view service resource.
    */
   private static Set<String> propertyIds = new HashSet<String>();
   static {
@@ -58,7 +58,7 @@ public class ViewServiceResourceProvider extends AbstractResourceProvider{
 
 
   /**
-   * Construct a view resource provider.
+   * Construct a view service resource provider.
    */
   public ViewServiceResourceProvider() {
     super(propertyIds, keyPropertyIds);
@@ -85,7 +85,6 @@ public class ViewServiceResourceProvider extends AbstractResourceProvider{
       propertyMaps.add(Collections.<String, Object>emptyMap());
     }
 
-   // requestedIds.add(SERVICE_PARAMETER_PROPERTY_ID);
     ViewRegistry viewRegistry = ViewRegistry.getInstance();
 
     for (Map<String, Object> propertyMap : propertyMaps) {
@@ -106,11 +105,11 @@ public class ViewServiceResourceProvider extends AbstractResourceProvider{
 
   @Override
   public RequestStatus updateResources(Request request, Predicate predicate) throws SystemException, UnsupportedPropertyException, NoSuchResourceException, NoSuchParentResourceException {
-    return null;
+    throw new UnsupportedOperationException("Not yet supported.");
   }
 
   @Override
   public RequestStatus deleteResources(Predicate predicate) throws SystemException, UnsupportedPropertyException, NoSuchResourceException, NoSuchParentResourceException {
-    return null;
+    throw new UnsupportedOperationException("Not yet supported.");
   }
 }

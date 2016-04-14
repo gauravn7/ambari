@@ -31,8 +31,10 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Represents a service config.
@@ -54,7 +56,7 @@ public class ViewServiceEntity {
    * The list of view parameters.
    */
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "viewservice")
-  private Collection<ViewServiceParameterEntity> parameters = new HashSet<ViewServiceParameterEntity>();
+  private List<ViewServiceParameterEntity> parameters = new ArrayList<ViewServiceParameterEntity>();
 
   @Transient
   private ServiceConfig configuration;
@@ -91,11 +93,11 @@ public class ViewServiceEntity {
     }
   }
 
-  public Collection<ViewServiceParameterEntity> getParameters() {
+  public List<ViewServiceParameterEntity> getParameters() {
     return parameters;
   }
 
-  public void setParameters(Collection<ViewServiceParameterEntity> parameters) {
+  public void setParameters(List<ViewServiceParameterEntity> parameters) {
     this.parameters = parameters;
   }
 

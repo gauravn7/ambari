@@ -62,6 +62,14 @@ public class ServiceConfig {
     return version;
   }
 
+  public String getMinAmbariVersion() {
+    return minAmbariVersion;
+  }
+
+  public String getMaxAmbariVersion() {
+    return maxAmbariVersion;
+  }
+
   public List<ServiceParameterConfig> getParameters() {
     return parameters;
   }

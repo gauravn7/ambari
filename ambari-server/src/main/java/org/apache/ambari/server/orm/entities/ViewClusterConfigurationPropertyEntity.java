@@ -95,4 +95,27 @@ public class ViewClusterConfigurationPropertyEntity {
   public void setClusterName(String clusterName) {
     this.clusterName = clusterName;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    ViewClusterConfigurationPropertyEntity that = (ViewClusterConfigurationPropertyEntity) o;
+
+    if (clusterName != null ? !clusterName.equals(that.clusterName) : that.clusterName != null) return false;
+    if (serviceName != null ? !serviceName.equals(that.serviceName) : that.serviceName != null) return false;
+    if (name != null ? !name.equals(that.name) : that.name != null) return false;
+    return !(value != null ? !value.equals(that.value) : that.value != null);
+
+  }
+
+  @Override
+  public int hashCode() {
+    int result = clusterName != null ? clusterName.hashCode() : 0;
+    result = 31 * result + (serviceName != null ? serviceName.hashCode() : 0);
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (value != null ? value.hashCode() : 0);
+    return result;
+  }
 }

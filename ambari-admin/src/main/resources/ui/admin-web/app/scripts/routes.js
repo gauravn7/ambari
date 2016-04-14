@@ -89,17 +89,17 @@ angular.module('ambariAdminConsole')
       controller: 'RemoteClusterListCtrl'
     },
     edit: {
-          url:'/remoteclusters/:clusterName/edit',
-          templateUrl: 'views/ambariViews/createClusters.html',
-          controller: 'RemoteClusterInstanceCtrl',
-          isEditPage : true
-        },
+      url:'/remoteclusters/:clusterName/edit',
+      templateUrl: 'views/ambariViews/viewClusters.html',
+      controller: 'RemoteClusterInstanceCtrl',
+      isEditPage : true
+    },
     create: {
-              url:'/remoteclusters/create',
-              templateUrl: 'views/ambariViews/createClusters.html',
-              controller: 'RemoteClusterInstanceCtrl',
-              isEditPage:false
-            }
+      url:'/remoteclusters/create',
+      templateUrl: 'views/ambariViews/viewClusters.html',
+      controller: 'RemoteClusterInstanceCtrl',
+      isEditPage:false
+    }
 
   },
   stackVersions: {

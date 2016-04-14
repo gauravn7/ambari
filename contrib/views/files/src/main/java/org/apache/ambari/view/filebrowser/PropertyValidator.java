@@ -34,8 +34,12 @@ public class PropertyValidator implements Validator {
 
   @Override
   public ValidationResult validateProperty(String property, ViewInstanceDefinition viewInstanceDefinition, ValidationContext validationContext) {
+    return null;
+  }
+
+  @Override
+  public ValidationResult validateProperty(String property, String webhdfsUrl, ValidationContext mode) {
     if (property.equals(WEBHDFS_URL)) {
-      String webhdfsUrl = viewInstanceDefinition.getPropertyMap().get(WEBHDFS_URL);
       if (webhdfsUrl != null) {
         if (!ValidatorUtils.validateHdfsURL(webhdfsUrl)) {
           return new InvalidPropertyValidationResult(false, "Must be valid URL");

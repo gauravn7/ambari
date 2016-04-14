@@ -18,6 +18,7 @@
 
 package org.apache.ambari.server.view;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
@@ -53,6 +54,7 @@ import org.apache.ambari.server.view.configuration.*;
 import org.apache.ambari.server.view.validation.ValidationException;
 import org.apache.ambari.view.ViewInstanceDefinition;
 import org.apache.ambari.view.cluster.Cluster;
+import org.apache.ambari.view.validation.ValidationResult;
 import org.apache.ambari.view.validation.Validator;
 import org.apache.ambari.view.Masker;
 import org.apache.ambari.view.SystemException;
@@ -455,12 +457,16 @@ public class ViewRegistry {
 
     return subResourceDefinitionsMap.get(viewName);
   }
+
+  public void initServiceDefinitions(){
+    readServiceDefinitions();
+    readClusterConfigurations();
+  }
+
   /**
    * Read all view archives.
    */
   public void readViewArchives() {
-    readServiceDefinitions();
-    readClusterConfigurations();
     readViewArchives(false, false, ALL_VIEWS_REG_EXP);
   }
 
@@ -513,7 +519,7 @@ public class ViewRegistry {
               version + "/" + instanceName);
         }
 
-        instanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE);
+        instanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE,getClusterProperties(instanceEntity));
 
         setPersistenceEntities(instanceEntity);
 
@@ -558,7 +564,7 @@ public class ViewRegistry {
     ViewEntity viewEntity = getDefinition(instanceEntity.getViewName());
 
     if (viewEntity != null) {
-      instanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_UPDATE);
+      instanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_UPDATE,getClusterProperties(instanceEntity));
       instanceDAO.merge(instanceEntity);
 
       syncViewInstance(instanceEntity);
@@ -1097,10 +1103,20 @@ public class ViewRegistry {
                                                             InstanceConfig instanceConfig)
       throws ValidationException, ClassNotFoundException, SystemException {
     ViewInstanceEntity viewInstanceDefinition = createViewInstanceEntity(viewDefinition, viewConfig, instanceConfig);
-    viewInstanceDefinition.validate(viewDefinition, Validator.ValidationContext.PRE_CREATE);
+    viewInstanceDefinition.validate(viewDefinition, Validator.ValidationContext.PRE_CREATE,getClusterProperties(viewInstanceDefinition));
 
     bindViewInstance(viewDefinition, viewInstanceDefinition);
     return viewInstanceDefinition;
+  }
+
+  public Map<String,String> getClusterProperties(ViewInstanceEntity viewInstanceDefinition){
+    Map<String,String> clusterProperties = new HashMap<String,String>();
+    ViewClusterConfigurationEntity clusterConfiguration = getViewClusterConfiguration(viewInstanceDefinition.getClusterHandle());
+    if(viewInstanceDefinition.getClusterType().equals(ViewInstanceEntity.STANDALONE)
+      && clusterConfiguration != null){
+      clusterProperties.putAll(clusterConfiguration.getPropertyMap(new HashSet<String>(viewInstanceDefinition.getViewEntity().getViewServices())));
+    }
+    return clusterProperties;
   }
 
   // create a view instance from the given configuration
@@ -1655,43 +1671,64 @@ public class ViewRegistry {
   protected boolean checkViewVersions(ViewEntity view, String serverVersion) {
     ViewConfig config = view.getConfiguration();
 
-    return checkViewVersion(view, config.getMinAmbariVersion(), serverVersion, "minimum", 1, "less than") &&
-           checkViewVersion(view, config.getMaxAmbariVersion(), serverVersion, "maximum", -1, "greater than");
+    Optional<String> errorOpt = checkVersion("view" , view.getName(), config.getMinAmbariVersion(), serverVersion, "minimum", 1, "less than").or(
+      checkVersion("view" , view.getName(), config.getMaxAmbariVersion(), serverVersion, "maximum", -1, "greater than"));
+
+    if(errorOpt.isPresent()){
+      setViewStatus(view,ViewEntity.ViewStatus.ERROR,errorOpt.get());
+    }
+    return !errorOpt.isPresent();
+  }
+
+  /**
+   * Check the configured view max and min Ambari versions for the given service entity
+   * against the given Ambari server version.
+   *
+   * @param config  the Service config
+   * @param serverVersion  the server version
+   *
+   * @return true if the given server version >= min version && <= max version for the given view
+   */
+  protected boolean checkServiceVersions(ServiceConfig config, String serverVersion) {
+
+    return !checkVersion("service",config.getServiceName(),config.getMinAmbariVersion(), serverVersion, "minimum", 1, "less than").or(
+      checkVersion("service",config.getServiceName(),config.getMaxAmbariVersion(), serverVersion, "maximum", -1, "greater than")).isPresent();
 
   }
 
   // check the given version against the actual Ambari server version
-  private boolean checkViewVersion(ViewEntity view, String version, String serverVersion, String label,
-                                   int errValue, String errMsg) {
+  // returns Optional of errorMsg
+  private Optional<String> checkVersion(String entityType,String entityName, String version, String serverVersion, String label,
+                                int errValue, String errMsg) {
 
     if (version != null && !version.isEmpty()) {
 
       // make sure that the given version is a valid version string
       if (!version.matches(VIEW_AMBARI_VERSION_REGEXP)) {
-        String msg = "The configured " + label + " Ambari version " + version + " for view " +
-            view.getName() + " is not valid.";
+        String msg = "The configured " + label + " Ambari version " + version + " for " + entityType + " " +
+          entityName + " is not valid.";
 
-        setViewStatus(view, ViewEntity.ViewStatus.ERROR, msg);
         LOG.error(msg);
-        return false;
+        return Optional.of(msg);
       }
 
       int index = version.indexOf('*');
 
       int compVal = index == -1 ? VersionUtils.compareVersions(version, serverVersion) :
-                    index > 0 ? VersionUtils.compareVersions(version.substring(0, index), serverVersion, index) : 0;
+        index > 0 ? VersionUtils.compareVersions(version.substring(0, index), serverVersion, index) : 0;
 
       if (compVal == errValue) {
         String msg = "The Ambari server version " + serverVersion + " is " + errMsg + " the configured " + label +
-            " Ambari version " + version + " for view " + view.getName();
+          " Ambari version " + version + " for " + entityType + " "  + entityName;
 
-        setViewStatus(view, ViewEntity.ViewStatus.ERROR, msg);
         LOG.error(msg);
-        return false;
+        return Optional.of(msg);
       }
     }
-    return true;
+    return Optional.absent();
   }
+
+
 
   // persist the given view and its instances
   @Transactional
@@ -1747,16 +1784,28 @@ public class ViewRegistry {
     return false;
   }
 
+  /**
+   * Read All stored view cluster configuration
+   */
   public void readClusterConfigurations(){
     for(ViewClusterConfigurationEntity clusterConfig : clusterDao.findAll()){
       viewClusterConfiguration.put(clusterConfig.getName(),clusterConfig);
     }
   }
 
+  /**
+   *
+   * @return view service definitions Map
+   */
   public Map<String, ViewServiceEntity> getServiceDefinitions() {
     return serviceDefinitions;
   }
 
+  /**
+   *
+   * @param service
+   * @return Get ViewServiceEntity for service name
+   */
   public ViewServiceEntity getServiceDefinition(String service) {
     return serviceDefinitions.get(service);
   }
@@ -1775,7 +1824,11 @@ public class ViewRegistry {
     viewClusterConfiguration.put(viewClusterConfigurationEntity.getName(),viewClusterConfigurationEntity);
   }
 
-  public List<ViewClusterConfigurationEntity> getAllClusterConfigurations(){
+  /**
+   *
+   * @return All ViewClusterConfigurations
+   */
+  public Collection<ViewClusterConfigurationEntity> getAllClusterConfigurations(){
     return clusterDao.findAll();
   }
 

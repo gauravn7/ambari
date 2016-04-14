@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Cluster Configuration
@@ -48,8 +49,6 @@ public class ViewClusterConfigurationEntity {
   @Column(name = "name", nullable = false, updatable = false)
   private String name;
 
-//  @OneToMany(cascade = CascadeType.ALL)
-//  private Collection<String> services = new HashSet<String>();
 
   /**
    * The Cluster properties.
@@ -60,14 +59,17 @@ public class ViewClusterConfigurationEntity {
   public ViewClusterConfigurationEntity() {
   }
 
-//  public ViewClusterConfigurationEntity(String name) {
-//    this.name = name;
-//  }
 
   public Map<String,String> getPropertyMap() {
+    return getPropertyMap(null);
+  }
+
+  public Map<String,String> getPropertyMap(Set<String> desiredServices) {
     Map<String,String> properties = new HashMap<String,String>();
     for(ViewClusterServiceEntity service : services){
-      properties.putAll(service.getPropertyMap());
+      if(desiredServices == null || desiredServices.contains(service.getName())){
+        properties.putAll(service.getPropertyMap());
+      }
     }
     return properties;
   }
@@ -80,11 +82,9 @@ public class ViewClusterConfigurationEntity {
     this.name = name;
   }
 
-//  public Collection<String> getServices() {
-//    return services;
-//  }
-
   public void addService(ViewClusterServiceEntity service){
+    service.setClusterName(this.name);
+    service.setClusterConfiguration(this);
     services.add(service);
   }
 
@@ -96,7 +96,4 @@ public class ViewClusterConfigurationEntity {
     return services;
   }
 
-  public void setServices(Collection<ViewClusterServiceEntity> services) {
-    this.services = services;
-  }
 }

@@ -306,10 +306,10 @@ angular.module('ambariAdminConsole')
 
       if($scope.isLocalCluster) {
         data.ViewInstanceInfo.cluster_handle = $scope.cluster;
-        data.ViewInstanceInfo.ambari_managed = true;
+        data.ViewInstanceInfo.cluster_type = "AMBARI";
       } else {
         data.ViewInstanceInfo.cluster_handle = $scope.remoteCluster;
-        data.ViewInstanceInfo.ambari_managed = false;
+        data.ViewInstanceInfo.cluster_type = "STANDALONE";
         $scope.configurationMeta.forEach(function (element) {
           if(element.clusterConfig) {
             data.ViewInstanceInfo.properties[element.name] = $scope.configuration[element.name];

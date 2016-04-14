@@ -16,6 +16,8 @@
 -->
 <service-config>
     <name>HDFS</name>
+    <version>1.0.0</version>
+    <min-ambari-version>2.4.0</min-ambari-version>
 
     <parameter>
         <name>webhdfs.auth</name>

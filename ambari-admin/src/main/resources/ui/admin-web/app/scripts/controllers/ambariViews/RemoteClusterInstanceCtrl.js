@@ -41,7 +41,7 @@ angular.module('ambariAdminConsole')
         view.isChecked = checkIfViewSelected(view);
         $scope.views.push(view);
       });
-      refreshInstanceData(true);
+      if($scope.isEditPage) refreshInstanceData(true);
     }).catch(function(data) {
       Alert.error('Cannot load views configurations', data.data.message);
     });
@@ -62,8 +62,8 @@ angular.module('ambariAdminConsole')
   };
 
   $scope.isEditPage = $route.current.$$route.isEditPage;
-  $scope.enableInputs = true;
-  if($scope.isEditPage) $scope.enableInputs = false;
+  $scope.enableInputs = !$scope.isEditPage;
+  //if($scope.isEditPage) $scope.enableInputs = false;
 
   $scope.instance= {
     name : '',
@@ -177,7 +177,6 @@ angular.module('ambariAdminConsole')
             var service = $scope.services[serviceName];
             if(service) {
             //merging parameters for same service name (different versions)
-              console.log(service)
               var instanceService = $scope.instance.services[service.commonName];
               if(!instanceService){
                 instanceService = {

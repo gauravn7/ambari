@@ -89,5 +89,9 @@ public interface ViewInstanceDefinition {
    */
   public ViewDefinition getViewDefinition();
 
+  /**
+   * Get cluster type AMBARI_MANAGED,REMOTE_AMBARI,STANDALONE
+   * @return the cluster type
+   */
   public String getClusterType();
 }

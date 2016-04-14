@@ -24,7 +24,8 @@
 
     <validator-class>org.apache.ambari.view.filebrowser.PropertyValidator</validator-class>
 
-    <service>HDFS</service>
+    <service>HDFS{1.0.0}</service>
+
     <parameter>
         <name>webhdfs.username</name>
         <description>doAs for proxy user for HDFS. By default, uses the currently logged-in Ambari user.</description>

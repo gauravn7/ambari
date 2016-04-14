@@ -14,27 +14,22 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<view>
-  <name>AUTO-CLUSTER</name>
-  <label>AutoCluster</label>
-  <version>0.1.0</version>
-  
-  <min-ambari-version>2.0.*</min-ambari-version>
 
-  <service>auto-cluster-view{1.0.0}</service>
-  
-  <resource>
-    <name>properties</name>
-    <service-class>org.apache.ambari.view.examples.AutoClusterService</service-class>
-  </resource>
-  
-  <auto-instance>
-    <name>AUTO_CLUSTER_INSTANCE</name>
-    <label>Auto Cluster Instance View</label>
-    <description>This view instance is auto created when the YARN service is added to a cluster.</description>
-    <stack-id>HDP-2.*</stack-id>
-    <services>
-      <service>YARN</service>
-    </services>
-  </auto-instance>
-</view>
+<service-config>
+    <name>cluster-view</name>
+    <version>1.0.0</version>
+    <parameter>
+        <name>hdfs_user</name>
+        <description>The hdfs_user value from the hadoop-env configuration.  Requires cluster association.</description>
+        <label>HDFS User</label>
+        <default-value>not available</default-value>
+        <cluster-config>hadoop-env/hdfs_user</cluster-config>
+    </parameter>
+    <parameter>
+        <name>proxyuser_group</name>
+        <description>The proxyuser_group value from the hadoop-env configuration.  Requires cluster association.</description>
+        <label>ProxyUser Group</label>
+        <default-value>not available</default-value>
+        <cluster-config>hadoop-env/proxyuser_group</cluster-config>
+    </parameter>
+</service-config>

@@ -77,6 +77,9 @@ public class ViewContextImplTest {
     ViewRegistry viewRegistry = createNiceMock(ViewRegistry.class);
 
     expect(viewRegistry.getCluster(viewInstanceDefinition)).andReturn(null).anyTimes();
+    expect(viewRegistry.getViewClusterConfiguration(null)).andReturn(null).anyTimes();
+
+    replay(viewRegistry);
 
     viewInstanceDefinition.putProperty("p1", "v1");
     viewInstanceDefinition.putProperty("p2", new DefaultMasker().mask("v2"));
@@ -123,6 +126,8 @@ public class ViewContextImplTest {
     ViewRegistry viewRegistry = createNiceMock(ViewRegistry.class);
     expect(viewRegistry.getCluster(viewInstanceDefinition)).andReturn(null).anyTimes();
     replay(viewRegistry);
+
+    viewInstanceDefinition.setClusterType(ViewInstanceEntity.AMBARI_MANAGED);
     viewInstanceDefinition.putProperty("p1", "/tmp/some/path/${username}");
     viewInstanceDefinition.putProperty("p2", new DefaultMasker().mask("/tmp/path/$viewName"));
     viewInstanceDefinition.putProperty("p3", "/path/$instanceName");

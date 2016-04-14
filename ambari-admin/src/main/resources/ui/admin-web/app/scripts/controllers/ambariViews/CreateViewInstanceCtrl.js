@@ -32,7 +32,6 @@ angular.module('ambariAdminConsole')
 
       angular.forEach(parameters, function (item) {
         item.value = item['defaultValue'];
-        item.clusterConfig = !!item.clusterConfig;
         item.displayName = item.name.replace(/\./g, '\.\u200B');
         $scope.numberOfSettingConfigs++;
       });
@@ -66,6 +65,18 @@ angular.module('ambariAdminConsole')
     }
   });
 
+//  $scope.$watch(function(scope){
+//    return scope.remoteCluster ;
+//  }, function(remoteCluster){
+//    if(remoteCluster){
+//      console.log(remoteCluster);
+//    }
+//  });
+
+//  $scope.onRemoteClusterChange = function(){
+//    console.log($scope.$parent.remoteCluster);
+//  };
+
   $scope.enableLocalCluster = function () {
     if($scope.errorKeys.length > 0) {
       $scope.errorKeys.forEach( function (key) {
@@ -90,9 +101,11 @@ angular.module('ambariAdminConsole')
   $scope.clusters = [];
   $scope.remoteClusters = [];
   $scope.noClusterAvailible = true;
+  $scope.noRemoteClusterAvailible = true;
   $scope.cluster = null;
-  $scope.remoteCluster = null;
-  $scope.numberOfClusterConfigs = 0;
+  $scope.remoteCluster = {};
+  $scope.remoteClusterError = true;
+  $scope.remoteClusterErrorMsg = '';
   $scope.numberOfSettingConfigs = 0;
 
   function loadClusters () {
@@ -117,11 +130,10 @@ angular.module('ambariAdminConsole')
          $scope.remoteClusters.push(cluster.name)
        });
        $scope.noRemoteClusterAvailible = false;
-       //$scope.instance.isLocalCluster = $scope.clusterConfigurable;
        }else{
          $scope.remoteClusters.push("No Clusters");
        }
-       $scope.remoteCluster = $scope.remoteClusters[0];
+//       $scope.remoteCluster = $scope.remoteClusters[0];
     });
   }
 

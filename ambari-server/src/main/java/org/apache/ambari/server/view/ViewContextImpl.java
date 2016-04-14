@@ -110,6 +110,11 @@ public class ViewContextImpl implements ViewContext, ViewController {
   private Masker masker;
 
   /**
+   * Default masker used for service properties
+   */
+  private Masker defaultMasker = new DefaultMasker();
+
+  /**
    * The velocity context used to evaluate property templates.
    */
   private final VelocityContext velocityContext;
@@ -409,22 +414,34 @@ public class ViewContextImpl implements ViewContext, ViewController {
    * @return the property values for the instance
    */
   private Map<String, String> getPropertyValues() {
+    Map<String,String> clusterProperties = getClusterProperties();
+    clusterProperties.putAll(getInstanceProperties());
+    return clusterProperties;
+  }
+
+  /**
+   *
+   * @return cluster properties from instance
+   */
+  private Map<String,String> getClusterProperties(){
+
     Map<String, String> properties = new HashMap<String,String>();
 
-    ViewClusterConfigurationEntity viewClusterConfig =  viewRegistry.getViewClusterConfiguration(viewInstanceEntity.getClusterHandle());
+    ViewClusterConfigurationEntity viewClusterConfig =
+      viewRegistry.getViewClusterConfiguration(viewInstanceEntity.getClusterHandle());
+
     if(viewInstanceEntity.getClusterType()
       .equals(ViewInstanceEntity.STANDALONE) && viewClusterConfig != null){
-      properties.putAll(viewClusterConfig.getPropertyMap());
+      properties.putAll(viewClusterConfig.getPropertyMap(new HashSet<String>(viewInstanceEntity.getViewEntity().getViewServices())));
     }
-    properties.putAll(viewInstanceEntity.getPropertyMap());
 
-    Map<String, ServiceParameterConfig> parameters = new HashMap<String, ServiceParameterConfig>();
+    Map<String, ServiceParameterConfig> serviceParameters = new HashMap<String, ServiceParameterConfig>();
 
     for (String service : viewEntity.getConfiguration().getServices()) {
       ViewServiceEntity serviceEntity = viewRegistry.getServiceDefinition(service);
       if(serviceEntity != null){
         for(ServiceParameterConfig paramConfig : serviceEntity.getConfiguration().getParameters()){
-          parameters.put(paramConfig.getName(), paramConfig);
+          serviceParameters.put(paramConfig.getName(), paramConfig);
           if(!properties.containsKey(paramConfig.getName())){
             properties.put(paramConfig.getName(),paramConfig.getDefaultValue());
           }
@@ -438,26 +455,63 @@ public class ViewContextImpl implements ViewContext, ViewController {
       String propertyName  = entry.getKey();
       String propertyValue = entry.getValue();
 
-      ServiceParameterConfig parameterConfig = parameters.get(propertyName);
+      ServiceParameterConfig parameterConfig = serviceParameters.get(propertyName);
 
-      if (parameterConfig != null) {
-
+      if(parameterConfig != null) {
         String clusterConfig = parameterConfig.getClusterConfig();
         if (clusterConfig != null && cluster != null) {
           propertyValue = getClusterConfigurationValue(cluster, clusterConfig);
         } else {
           if (parameterConfig.isMasked()) {
-            try {
-              propertyValue = masker.unmask(propertyValue);
-            } catch (MaskException e) {
-              LOG.error("Failed to unmask view property", e);
-            }
+            propertyValue = getUnmaskedValue(defaultMasker,propertyValue);
           }
         }
       }
       properties.put(propertyName, evaluatePropertyTemplates(propertyValue));
     }
     return properties;
+  }
+
+  /**
+   *
+   * @return instance properties after applying mask
+   */
+  private Map<String,String> getInstanceProperties(){
+
+    Map<String,String> properties = viewInstanceEntity.getPropertyMap();
+    Map<String, ParameterConfig> parameters = new HashMap<String, ParameterConfig>();
+
+    for (ParameterConfig paramConfig : viewEntity.getConfiguration().getParameters()) {
+      parameters.put(paramConfig.getName(), paramConfig);
+    }
+
+    for(Entry<String, String> entry: properties.entrySet()){
+      String propertyName  = entry.getKey();
+      String propertyValue = entry.getValue();
+
+      ParameterConfig parameter = parameters.get(propertyName);
+
+      if(parameter != null && parameter.isMasked()){
+        propertyValue = getUnmaskedValue(masker,propertyValue);
+      }
+      properties.put(propertyName, evaluatePropertyTemplates(propertyValue));
+    }
+    return  properties;
+  }
+
+  /**
+   * Get Unmask value
+   * @param masker
+   * @param propertyValue
+   * @return
+   */
+  private String getUnmaskedValue(Masker masker,String propertyValue) {
+    try {
+      propertyValue = masker.unmask(propertyValue);
+    } catch (MaskException e) {
+      LOG.error("Failed to unmask view property", e);
+    }
+    return propertyValue;
   }
 
   /**
