@@ -268,7 +268,7 @@ public class ViewInstanceResourceProvider extends AbstractResourceProvider {
 
         InstanceValidationResultImpl result =
             viewInstanceEntity.getValidationResult(viewEntity,
-              Validator.ValidationContext.EXISTING,viewRegistry.getClusterProperties(viewInstanceEntity));
+              Validator.ValidationContext.EXISTING,viewRegistry.getClusterProperties(viewInstanceEntity,viewEntity));
 
         setResourceProperty(resource, VALIDATION_RESULT_PROPERTY_ID, ValidationResultImpl.create(result), requestedIds);
         setResourceProperty(resource, PROPERTY_VALIDATION_RESULTS_PROPERTY_ID, result.getPropertyResults(), requestedIds);

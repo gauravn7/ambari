@@ -157,11 +157,12 @@
         <label for="" class="control-label col-sm-3 ng-binding not-required" >Cluster Name</label>
         <div>
           <div class="col-sm-9">
-            <select ng-model="remoteCluster" ng-disabled="!clusterConfigurable || instance.isLocalCluster" class="clusters-name-dropdown form-control"  ng-options="o as o for o in remoteClusters" ng-change="onRemoteClusterChange()"></select>
+            <select ng-model="remoteCluster" ng-disabled="!clusterConfigurable || instance.isLocalCluster" class="clusters-name-dropdown form-control"  ng-options="o as o.name for o in remoteClusters" ng-change="onRemoteClusterChange()"></select>
           </div>
         </div>
-        <div class="col-sm-12">
+        <div class="col-sm-12" ng-hide="!remoteClusterError">
           {{remoteClusterErrorMsg}}
+          <a href="#/remoteclusters/{{remoteCluster.name}}/edit">{{remoteCluster.name}}</a>
         </div>
       </div>
     </div>
@@ -170,7 +171,7 @@
 
   <div class="col-sm-12 ">
     <button class="btn btn-primary pull-right left-margin save-button"
-            ng-class="{'disabled' : (form.instanceCreateForm.isSaving)}" ng-click="save()" type="submit">Save</button>
+            ng-class="{'disabled' : (form.instanceCreateForm.isSaving) || remoteClusterError}" ng-click="save()" type="submit">Save</button>
     <a href ng-click="cancel()" class="btn btn-default pull-right cancel-button">Cancel</a>
   </div>
 

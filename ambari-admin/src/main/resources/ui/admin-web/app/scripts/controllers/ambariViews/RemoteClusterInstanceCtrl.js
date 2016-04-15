@@ -63,7 +63,6 @@ angular.module('ambariAdminConsole')
 
   $scope.isEditPage = $route.current.$$route.isEditPage;
   $scope.enableInputs = !$scope.isEditPage;
-  //if($scope.isEditPage) $scope.enableInputs = false;
 
   $scope.instance= {
     name : '',

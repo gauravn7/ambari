@@ -29,14 +29,6 @@ angular.module('ambariAdminConsole')
   function loadClusters(){
     RemoteCluster.all().then(function(clusters) {
       $scope.clusters = clusters;
-//      $scope.getFilteredViews();
-//      angular.forEach(views, function(view) {
-//        angular.forEach(view.versions, function(versionObj, versionNumber) {
-//          if (versionObj.status !== 'DEPLOYED' || versionObj.status !== 'ERROR'){
-//            checkViewVersionStatus(view, versionObj, versionNumber);
-//          }
-//        });
-//      })
     }).catch(function(data) {
       Alert.error('Cannot load views', data.data.message);
     });
@@ -49,44 +41,4 @@ angular.module('ambariAdminConsole')
    $location.path('/remoteclusters/create')
   };
 
-//  $scope.viewsFilter = '';
-//  $scope.filteredViews = [];
-//  $scope.getFilteredViews = function(views) {
-//    var result = [];
-//    var filter = $scope.viewsFilter.toLowerCase();
-//    if(!filter){  // if no filter return all views
-//      result = $scope.views.map(function(view) {
-//        view.isOpened = false;
-//        return view;
-//      });
-//    } else {
-//      result = $scope.views.map(function(view) {
-//        view.isOpened = true;
-//        if(view.view_name.toLowerCase().indexOf(filter) >= 0){
-//          return view; // if filter matched with view name -- return whole view
-//        } else {
-//          var instances = [];
-//          angular.forEach(view.instances, function(instance) {
-//            if(instance.ViewInstanceInfo.label.toLowerCase().indexOf(filter) >= 0){
-//              instances.push(instance);
-//            }
-//          });
-//          if( instances.length ){ // If inside view exists instances with matched filter - show only this instances
-//            var v = angular.copy(view);
-//            v.instances = instances;
-//            return v;
-//          }
-//        }
-//      }).filter(function(view) {
-//        return !!view; // Remove 'undefined'
-//      });
-//    }
-//    $scope.filteredViews = result;
-//  };
-
-//  $scope.gotoCreate = function(viewName, isAllowed) {
-//    if(isAllowed){
-//      $location.path('/views/'+viewName+'/new');
-//    }
-//  };
 }]);

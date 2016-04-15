@@ -29,6 +29,7 @@ angular.module('ambariAdminConsole')
 
       $scope.view = viewVersion;
       parameters = viewVersion.ViewVersionInfo.parameters;
+      $scope.services = viewVersion.ViewVersionInfo.services;
 
       angular.forEach(parameters, function (item) {
         item.value = item['defaultValue'];
@@ -73,9 +74,37 @@ angular.module('ambariAdminConsole')
 //    }
 //  });
 
-//  $scope.onRemoteClusterChange = function(){
-//    console.log($scope.$parent.remoteCluster);
-//  };
+  $scope.onRemoteClusterChange = function(){
+    $scope.remoteCluster = this.remoteCluster;
+    validateServices();
+  };
+
+  function validateServices(){
+   $scope.remoteClusterError = false ;
+    if(!$scope.instance.isLocalCluster && $scope.services){
+      var absentService = [];
+      $scope.services.forEach(function(service){
+        if(!servicePresent(service)){
+          absentService.push(service);
+        }
+      })
+
+      if(absentService.length > 0){
+        $scope.remoteClusterError = true ;
+        $scope.remoteClusterErrorMsg = absentService + " Not Present in Remote Cluster ";
+      }
+    }
+  }
+
+  function servicePresent(serviceName){
+   var isPresent = false;
+   $scope.remoteCluster.services.forEach(function(item){
+     if(serviceName == item.name){
+      isPresent = true;
+     }
+   });
+   return isPresent;
+  }
 
   $scope.enableLocalCluster = function () {
     if($scope.errorKeys.length > 0) {
@@ -103,8 +132,8 @@ angular.module('ambariAdminConsole')
   $scope.noClusterAvailible = true;
   $scope.noRemoteClusterAvailible = true;
   $scope.cluster = null;
-  $scope.remoteCluster = {};
-  $scope.remoteClusterError = true;
+  $scope.remoteCluster = null;
+  $scope.remoteClusterError = false;
   $scope.remoteClusterErrorMsg = '';
   $scope.numberOfSettingConfigs = 0;
 
@@ -127,13 +156,14 @@ angular.module('ambariAdminConsole')
     RemoteCluster.all().then(function (clusters){
      if(clusters.length >0){
        clusters.forEach(function(cluster) {
-         $scope.remoteClusters.push(cluster.name)
+         $scope.remoteClusters.push(cluster)
        });
        $scope.noRemoteClusterAvailible = false;
        }else{
          $scope.remoteClusters.push("No Clusters");
        }
-//       $scope.remoteCluster = $scope.remoteClusters[0];
+       $scope.remoteCluster = $scope.remoteClusters[0];
+       validateServices();
     });
   }
 
@@ -154,7 +184,8 @@ angular.module('ambariAdminConsole')
     $scope.form.instanceCreateForm.submitted = true;
     if($scope.form.instanceCreateForm.$valid){
       $scope.form.instanceCreateForm.isSaving = true;
-      $scope.instance.clusterName = $scope.instance.isLocalCluster ? $scope.cluster : $scope.remoteCluster;
+      console.log($scope);
+      $scope.instance.clusterName = $scope.instance.isLocalCluster ? $scope.cluster : $scope.remoteCluster.name;
       $scope.instance.clusterType = "STANDALONE";
       if($scope.instance.isLocalCluster){
         $scope.instance.clusterType = "AMBARI";

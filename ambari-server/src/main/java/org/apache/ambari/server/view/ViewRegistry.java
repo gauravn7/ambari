@@ -519,7 +519,7 @@ public class ViewRegistry {
               version + "/" + instanceName);
         }
 
-        instanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE,getClusterProperties(instanceEntity));
+        instanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE,getClusterProperties(instanceEntity,viewEntity));
 
         setPersistenceEntities(instanceEntity);
 
@@ -564,7 +564,7 @@ public class ViewRegistry {
     ViewEntity viewEntity = getDefinition(instanceEntity.getViewName());
 
     if (viewEntity != null) {
-      instanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_UPDATE,getClusterProperties(instanceEntity));
+      instanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_UPDATE,getClusterProperties(instanceEntity,viewEntity));
       instanceDAO.merge(instanceEntity);
 
       syncViewInstance(instanceEntity);
@@ -1103,18 +1103,19 @@ public class ViewRegistry {
                                                             InstanceConfig instanceConfig)
       throws ValidationException, ClassNotFoundException, SystemException {
     ViewInstanceEntity viewInstanceDefinition = createViewInstanceEntity(viewDefinition, viewConfig, instanceConfig);
-    viewInstanceDefinition.validate(viewDefinition, Validator.ValidationContext.PRE_CREATE,getClusterProperties(viewInstanceDefinition));
+    viewInstanceDefinition.validate(viewDefinition, Validator.ValidationContext.PRE_CREATE,getClusterProperties(viewInstanceDefinition,viewDefinition));
 
     bindViewInstance(viewDefinition, viewInstanceDefinition);
     return viewInstanceDefinition;
   }
 
-  public Map<String,String> getClusterProperties(ViewInstanceEntity viewInstanceDefinition){
+  // Get clusterproperties for viewInstance and view
+  public Map<String,String> getClusterProperties(ViewInstanceEntity viewInstanceDefinition,ViewEntity view){
     Map<String,String> clusterProperties = new HashMap<String,String>();
     ViewClusterConfigurationEntity clusterConfiguration = getViewClusterConfiguration(viewInstanceDefinition.getClusterHandle());
     if(viewInstanceDefinition.getClusterType().equals(ViewInstanceEntity.STANDALONE)
       && clusterConfiguration != null){
-      clusterProperties.putAll(clusterConfiguration.getPropertyMap(new HashSet<String>(viewInstanceDefinition.getViewEntity().getViewServices())));
+      clusterProperties.putAll(clusterConfiguration.getPropertyMap(new HashSet<String>(view.getViewServices())));
     }
     return clusterProperties;
   }
