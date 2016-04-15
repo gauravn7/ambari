@@ -18,7 +18,13 @@
 
 package org.apache.ambari.server.view;
 
+import jline.internal.Log;
+import org.apache.ambari.server.api.services.ViewService;
+import org.apache.ambari.server.view.configuration.ServiceConfig;
 import org.apache.ambari.server.view.configuration.ViewConfig;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -28,14 +34,16 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.JarInputStream;
 
 /**
@@ -47,8 +55,16 @@ public class ViewArchiveUtility {
    * Constants
    */
   private static final String VIEW_XML = "view.xml";
+  private static final String SERVICE_XML = "service.xml";
   private static final String WEB_INF_VIEW_XML = "WEB-INF/classes/" + VIEW_XML;
-  private static final String VIEW_XSD = "view.xsd";
+  private static final String WEB_INF_SERVICE_XML = "WEB-INF/classes/" + SERVICE_XML;
+  public static final String VIEW_XSD = "view.xsd";
+  public static final String SERVCIE_XSD = "view-service.xsd";
+  /**
+   * The logger.
+   */
+  protected final static Logger LOG = LoggerFactory.getLogger(ViewArchiveUtility.class);
+
 
 
   // ----- ViewArchiveUtility ------------------------------------------------
@@ -86,6 +102,73 @@ public class ViewArchiveUtility {
     }
   }
 
+  public void extractServiceConfigFromArchive(File archiveFile , final String servicePath) throws IOException{
+
+    Path path = Paths.get(archiveFile.getAbsolutePath());
+    URI uri = URI.create("jar:file:" + path.toUri().getPath());
+    Map<String, String> env = new HashMap<>();
+    FileSystem fs =  FileSystems.newFileSystem(uri, env);
+
+    Files.walkFileTree(fs.getPath("/"),new SimpleFileVisitor<Path>(){
+          @Override
+          public FileVisitResult visitFile(Path file,BasicFileAttributes attrs) throws IOException {
+            Path destFile = Paths.get(servicePath,file.toString());
+            if(file.toString().endsWith("-service.xml") && !destFile.toFile().exists()){
+              Files.copy(file, destFile);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+    });
+
+  }
+
+  /**
+   * Get the view configuration from the given archive file.
+   *
+   * @param servicePath  the archive file
+   *
+   * @return the associated view configuration
+   *
+   * @throws JAXBException if xml is malformed
+   */
+  public List<ServiceConfig> getServiceConfig(String servicePath, boolean validate) {
+
+    List<ServiceConfig> serviceConfigs = new ArrayList<ServiceConfig>();
+
+    File [] serviceFiles = new File(servicePath).listFiles( new FileFilter() {
+      public boolean accept( File file ) {
+        return file.getName().endsWith("-service.xml");
+      }
+    });
+
+    for(File file : serviceFiles){
+      InputStream configStream = null;
+      try {
+
+        configStream = new FileInputStream(file);
+        if (validate) {
+          validateConfig(new FileInputStream(file),SERVCIE_XSD);
+        }
+
+        JAXBContext jaxbContext       = JAXBContext.newInstance(ServiceConfig.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
+        serviceConfigs.add((ServiceConfig)jaxbUnmarshaller.unmarshal(configStream));
+      } catch (Exception e){
+        LOG.error("Caught exception reading service :" + file.getName(), e);
+      } finally {
+        if(configStream != null) try {
+          configStream.close();
+        } catch (IOException e){
+          LOG.error("Error closing stream :" + file.getName(), e);
+        }
+      }
+    }
+
+    return serviceConfigs;
+
+  }
+
   /**
    * Get the view configuration from the extracted archive file.
    *
@@ -107,7 +190,7 @@ public class ViewArchiveUtility {
     }
 
     if (validate) {
-      validateConfig(new FileInputStream(configFile));
+      validateConfig(new FileInputStream(configFile),VIEW_XSD);
     }
 
     InputStream  configStream = new FileInputStream(configFile);
@@ -166,10 +249,10 @@ public class ViewArchiveUtility {
    * @throws SAXException if the validation fails
    * @throws IOException if the descriptor file can not be read
    */
-  protected void validateConfig(InputStream  configStream) throws SAXException, IOException {
+  protected void validateConfig(InputStream  configStream, String resourceXSD) throws SAXException, IOException {
     SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
-    URL schemaUrl = getClass().getClassLoader().getResource(VIEW_XSD);
+    URL schemaUrl = getClass().getClassLoader().getResource(resourceXSD);
     Schema schema = schemaFactory.newSchema(schemaUrl);
 
     schema.newValidator().validate(new StreamSource(configStream));

@@ -47,6 +47,7 @@ import org.apache.ambari.server.controller.spi.Resource;
 import org.apache.ambari.server.security.SecurityHelper;
 import org.apache.ambari.server.security.SecurityHelperImpl;
 import org.apache.ambari.server.security.authorization.AmbariAuthorizationFilter;
+import org.apache.ambari.server.view.ViewRegistry;
 import org.apache.ambari.server.view.configuration.InstanceConfig;
 import org.apache.ambari.server.view.validation.InstanceValidationResultImpl;
 import org.apache.ambari.server.view.validation.ValidationException;
@@ -82,6 +83,10 @@ import org.apache.ambari.view.validation.ValidationResult;
 @Entity
 public class ViewInstanceEntity implements ViewInstanceDefinition {
 
+  public static final String AMBARI_MANAGED = "AMBARI";
+  public static final String AMBARI_REMOTE_MANAGED = "AMBARI_REMOTE";
+  public static final String STANDALONE = "STANDALONE";
+
   @Id
   @Column(name = "view_instance_id", nullable = false)
   @GeneratedValue(strategy = GenerationType.TABLE, generator = "view_instance_id_generator")
@@ -115,6 +120,10 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
    */
   @Column(name = "cluster_handle", nullable = true)
   private String clusterHandle;
+
+  @Column(name = "cluster_type", nullable = false)
+  private String clusterType;
+
 
   /**
    * Visible flag.
@@ -207,7 +216,7 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
    * instance is added.
    */
   @Transient
-  private final Map<String, Object> services = new HashMap<String, Object>();
+    private final Map<String, Object> services = new HashMap<String, Object>();
 
   /**
    * Helper class.
@@ -237,6 +246,7 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
     this.viewName = view.getName();
     this.description = instanceConfig.getDescription();
     this.clusterHandle = null;
+    this.clusterType = STANDALONE;
     this.visible = instanceConfig.isVisible() ? 'Y' : 'N';
     this.alterNames = 1;
     this.shortUrl = instanceConfig.getShortUrl();
@@ -353,6 +363,12 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
 
 
   @Override
+  public String getClusterType() {
+    return clusterType;
+  }
+
+
+  @Override
   public boolean isVisible() {
     return visible == 'y' || visible == 'Y';
   }
@@ -441,6 +457,10 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
    */
   public void setClusterHandle(String clusterHandle) {
     this.clusterHandle = clusterHandle;
+  }
+
+  public void setClusterType(String clusterType) {
+    this.clusterType = clusterType;
   }
 
   /**
@@ -805,8 +825,8 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
    *
    * @throws ValidationException if the instance can not be validated
    */
-  public void validate(ViewEntity viewEntity, Validator.ValidationContext context) throws ValidationException {
-    InstanceValidationResultImpl result = getValidationResult(viewEntity, context);
+  public void validate(ViewEntity viewEntity, Validator.ValidationContext context,Map<String,String> externalProperties) throws ValidationException {
+    InstanceValidationResultImpl result = getValidationResult(viewEntity, context,externalProperties);
     if (!result.isValid()) {
       throw new ValidationException(result.toJson());
     }
@@ -820,7 +840,7 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
    *
    * @return the instance validation result
    */
-  public InstanceValidationResultImpl getValidationResult(ViewEntity viewEntity, Validator.ValidationContext context)
+  public InstanceValidationResultImpl getValidationResult(ViewEntity viewEntity, Validator.ValidationContext context,Map<String,String> externalProperties)
       throws IllegalStateException {
 
     Map<String, ValidationResult> propertyResults = new HashMap<String, ValidationResult>();
@@ -835,9 +855,7 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
         if (parameter.isRequired()) {
           // Don't enforce 'required' validation for cluster config parameters since
           // the value will be obtained through cluster association, not user input
-          if (parameter.getClusterConfig()== null) {
             requiredParameterNames.add(parameter.getName());
-          }
         }
       }
       Map<String, String> propertyMap = getPropertyMap();
@@ -864,6 +882,16 @@ public class ViewInstanceEntity implements ViewInstanceDefinition {
         if (!propertyResults.containsKey(property)) {
           propertyResults.put(property,
               ValidationResultImpl.create(validator.validateProperty(property, this, context)));
+        }
+      }
+
+      if(clusterType.equals(STANDALONE) && externalProperties != null){
+        for (String property : externalProperties.keySet()) {
+          if (!propertyResults.containsKey(property)) {
+            propertyResults.put(property,
+              ValidationResultImpl.create(validator.validateProperty(property,
+                externalProperties.get(property), context)));
+          }
         }
       }
     }

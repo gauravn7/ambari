@@ -243,6 +243,12 @@ public class ViewEntity implements ViewDefinition {
   @Transient
   private boolean clusterConfigurable;
 
+  /**
+   * Indicates whether or not this view is configurable through cluster association.
+   */
+  @Transient
+  private Collection<String> viewServices = new HashSet<String>();
+
 
   // ----- Constructors ------------------------------------------------------
 
@@ -728,15 +734,8 @@ public class ViewEntity implements ViewDefinition {
   public void setConfiguration(ViewConfig configuration) {
     this.configuration       = configuration;
     this.clusterConfigurable = false;
-
-    // if any of the parameters contain a cluster config element then the view is cluster configurable
-    for (ParameterConfig parameterConfig : configuration.getParameters()) {
-      String clusterConfig = parameterConfig.getClusterConfig();
-      if (clusterConfig != null && !clusterConfig.isEmpty()) {
-        this.clusterConfigurable = true;
-        return;
-      }
-    }
+    this.viewServices = configuration.getServices();
+    if(configuration.getServices().size() > 0) clusterConfigurable = true;
   }
 
   /**
@@ -884,5 +883,13 @@ public class ViewEntity implements ViewDefinition {
    */
   public static String getViewName(String name, String version) {
     return name + "{" + version + "}";
+  }
+
+  public Collection<String> getViewServices() {
+    return viewServices;
+  }
+
+  public void setViewServices(Collection<String> viewServices) {
+    this.viewServices = viewServices;
   }
 }

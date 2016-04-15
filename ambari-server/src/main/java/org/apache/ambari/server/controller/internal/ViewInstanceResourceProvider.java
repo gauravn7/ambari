@@ -72,6 +72,7 @@ public class ViewInstanceResourceProvider extends AbstractAuthorizedResourceProv
   public static final String STATIC_PROPERTY_ID         = "ViewInstanceInfo/static";
   public static final String CLUSTER_HANDLE_PROPERTY_ID = "ViewInstanceInfo/cluster_handle";
   public static final String SHORT_URL_PROPERTY_ID      = "ViewInstanceInfo/short_url";
+  public static final String CLUSTER_TYPE_PROPERTY_ID = "ViewInstanceInfo/cluster_type";
 
   // validation properties
   public static final String VALIDATION_RESULT_PROPERTY_ID           = "ViewInstanceInfo/validation_result";
@@ -112,6 +113,7 @@ public class ViewInstanceResourceProvider extends AbstractAuthorizedResourceProv
     propertyIds.add(STATIC_PROPERTY_ID);
     propertyIds.add(CLUSTER_HANDLE_PROPERTY_ID);
     propertyIds.add(SHORT_URL_PROPERTY_ID);
+    propertyIds.add(CLUSTER_TYPE_PROPERTY_ID);
     propertyIds.add(VALIDATION_RESULT_PROPERTY_ID);
     propertyIds.add(PROPERTY_VALIDATION_RESULTS_PROPERTY_ID);
   }
@@ -229,6 +231,7 @@ public class ViewInstanceResourceProvider extends AbstractAuthorizedResourceProv
   protected Resource toResource(ViewInstanceEntity viewInstanceEntity, Set<String> requestedIds) {
     Resource   resource   = new ResourceImpl(Resource.Type.ViewInstance);
     ViewEntity viewEntity = viewInstanceEntity.getViewEntity();
+    ViewRegistry  viewRegistry = ViewRegistry.getInstance();
 
     String viewName = viewEntity.getCommonName();
     String version  = viewEntity.getVersion();
@@ -243,6 +246,7 @@ public class ViewInstanceResourceProvider extends AbstractAuthorizedResourceProv
     setResourceProperty(resource, STATIC_PROPERTY_ID, viewInstanceEntity.isXmlDriven(), requestedIds);
     setResourceProperty(resource, CLUSTER_HANDLE_PROPERTY_ID, viewInstanceEntity.getClusterHandle(), requestedIds);
     setResourceProperty(resource, SHORT_URL_PROPERTY_ID, viewInstanceEntity.getShortUrl(), requestedIds);
+    setResourceProperty(resource, CLUSTER_TYPE_PROPERTY_ID, viewInstanceEntity.getClusterType(), requestedIds);
 
     // only allow an admin to access the view properties
     if (ViewRegistry.getInstance().checkAdmin()) {
@@ -274,7 +278,8 @@ public class ViewInstanceResourceProvider extends AbstractAuthorizedResourceProv
           isPropertyRequested(PROPERTY_VALIDATION_RESULTS_PROPERTY_ID, requestedIds)) {
 
         InstanceValidationResultImpl result =
-            viewInstanceEntity.getValidationResult(viewEntity, Validator.ValidationContext.EXISTING);
+            viewInstanceEntity.getValidationResult(viewEntity,
+              Validator.ValidationContext.EXISTING,viewRegistry.getClusterProperties(viewInstanceEntity,viewEntity));
 
         setResourceProperty(resource, VALIDATION_RESULT_PROPERTY_ID, ValidationResultImpl.create(result), requestedIds);
         setResourceProperty(resource, PROPERTY_VALIDATION_RESULTS_PROPERTY_ID, result.getPropertyResults(), requestedIds);
@@ -331,6 +336,14 @@ public class ViewInstanceResourceProvider extends AbstractAuthorizedResourceProv
 
     String visible = (String) properties.get(VISIBLE_PROPERTY_ID);
     viewInstanceEntity.setVisible(visible==null ? true : Boolean.valueOf(visible));
+
+    String clusterType = (String) properties.get(CLUSTER_TYPE_PROPERTY_ID);
+
+    if(clusterType == null && !update) {
+      throw new IllegalArgumentException("Cluster Type for " + viewName + " does not exist.");
+    }
+
+    if(clusterType!=null) viewInstanceEntity.setClusterType(clusterType);
 
     if (properties.containsKey(ICON_PATH_ID)) {
       viewInstanceEntity.setIcon((String) properties.get(ICON_PATH_ID));

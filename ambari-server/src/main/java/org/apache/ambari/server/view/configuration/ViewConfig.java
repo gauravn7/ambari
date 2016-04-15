@@ -138,6 +138,12 @@ public class ViewConfig {
   private List<ParameterConfig> parameters;
 
   /**
+   * The list of services.
+   */
+  @XmlElement(name="service")
+  private List<String> services;
+
+  /**
    * The list of view resources.
    */
   @XmlElement(name="resource")
@@ -352,6 +358,15 @@ public class ViewConfig {
    */
   public List<ParameterConfig> getParameters() {
     return parameters == null ? Collections.<ParameterConfig>emptyList() : parameters;
+  }
+
+  /**
+   * Get the list of services.
+   *
+   * @return the list of service
+   */
+  public List<String> getServices() {
+    return services == null ? Collections.<String>emptyList() : services;
   }
 
   /**

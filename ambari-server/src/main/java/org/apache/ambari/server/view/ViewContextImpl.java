@@ -22,9 +22,13 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
 import org.apache.ambari.server.orm.entities.PermissionEntity;
+import org.apache.ambari.server.orm.entities.ViewClusterConfigurationEntity;
 import org.apache.ambari.server.orm.entities.ViewEntity;
 import org.apache.ambari.server.orm.entities.ViewInstanceEntity;
+import org.apache.ambari.server.orm.entities.ViewServiceEntity;
+import org.apache.ambari.server.orm.entities.ViewServiceParameterEntity;
 import org.apache.ambari.server.view.configuration.ParameterConfig;
+import org.apache.ambari.server.view.configuration.ServiceParameterConfig;
 import org.apache.ambari.server.view.configuration.ViewConfig;
 import org.apache.ambari.server.view.events.EventImpl;
 import org.apache.ambari.server.view.persistence.DataStoreImpl;
@@ -104,6 +108,11 @@ public class ViewContextImpl implements ViewContext, ViewController {
    * Masker for properties.
    */
   private Masker masker;
+
+  /**
+   * Default masker used for service properties
+   */
+  private Masker defaultMasker = new DefaultMasker();
 
   /**
    * The velocity context used to evaluate property templates.
@@ -405,12 +414,39 @@ public class ViewContextImpl implements ViewContext, ViewController {
    * @return the property values for the instance
    */
   private Map<String, String> getPropertyValues() {
-    Map<String, String> properties = viewInstanceEntity.getPropertyMap();
+    Map<String,String> clusterProperties = getClusterProperties();
+    clusterProperties.putAll(getInstanceProperties());
+    return clusterProperties;
+  }
 
-    Map<String, ParameterConfig> parameters = new HashMap<String, ParameterConfig>();
+  /**
+   *
+   * @return cluster properties from instance
+   */
+  private Map<String,String> getClusterProperties(){
 
-    for (ParameterConfig paramConfig : viewEntity.getConfiguration().getParameters()) {
-      parameters.put(paramConfig.getName(), paramConfig);
+    Map<String, String> properties = new HashMap<String,String>();
+
+    ViewClusterConfigurationEntity viewClusterConfig =
+      viewRegistry.getViewClusterConfiguration(viewInstanceEntity.getClusterHandle());
+
+    if(viewInstanceEntity.getClusterType()
+      .equals(ViewInstanceEntity.STANDALONE) && viewClusterConfig != null){
+      properties.putAll(viewClusterConfig.getPropertyMap(new HashSet<String>(viewInstanceEntity.getViewEntity().getViewServices())));
+    }
+
+    Map<String, ServiceParameterConfig> serviceParameters = new HashMap<String, ServiceParameterConfig>();
+
+    for (String service : viewEntity.getConfiguration().getServices()) {
+      ViewServiceEntity serviceEntity = viewRegistry.getServiceDefinition(service);
+      if(serviceEntity != null){
+        for(ServiceParameterConfig paramConfig : serviceEntity.getConfiguration().getParameters()){
+          serviceParameters.put(paramConfig.getName(), paramConfig);
+          if(!properties.containsKey(paramConfig.getName())){
+            properties.put(paramConfig.getName(),paramConfig.getDefaultValue());
+          }
+        }
+      }
     }
 
     Cluster cluster = getCluster();
@@ -419,26 +455,63 @@ public class ViewContextImpl implements ViewContext, ViewController {
       String propertyName  = entry.getKey();
       String propertyValue = entry.getValue();
 
-      ParameterConfig parameterConfig = parameters.get(propertyName);
+      ServiceParameterConfig parameterConfig = serviceParameters.get(propertyName);
 
-      if (parameterConfig != null) {
-
+      if(parameterConfig != null) {
         String clusterConfig = parameterConfig.getClusterConfig();
         if (clusterConfig != null && cluster != null) {
           propertyValue = getClusterConfigurationValue(cluster, clusterConfig);
         } else {
           if (parameterConfig.isMasked()) {
-            try {
-              propertyValue = masker.unmask(propertyValue);
-            } catch (MaskException e) {
-              LOG.error("Failed to unmask view property", e);
-            }
+            propertyValue = getUnmaskedValue(defaultMasker,propertyValue);
           }
         }
       }
       properties.put(propertyName, evaluatePropertyTemplates(propertyValue));
     }
     return properties;
+  }
+
+  /**
+   *
+   * @return instance properties after applying mask
+   */
+  private Map<String,String> getInstanceProperties(){
+
+    Map<String,String> properties = viewInstanceEntity.getPropertyMap();
+    Map<String, ParameterConfig> parameters = new HashMap<String, ParameterConfig>();
+
+    for (ParameterConfig paramConfig : viewEntity.getConfiguration().getParameters()) {
+      parameters.put(paramConfig.getName(), paramConfig);
+    }
+
+    for(Entry<String, String> entry: properties.entrySet()){
+      String propertyName  = entry.getKey();
+      String propertyValue = entry.getValue();
+
+      ParameterConfig parameter = parameters.get(propertyName);
+
+      if(parameter != null && parameter.isMasked()){
+        propertyValue = getUnmaskedValue(masker,propertyValue);
+      }
+      properties.put(propertyName, evaluatePropertyTemplates(propertyValue));
+    }
+    return  properties;
+  }
+
+  /**
+   * Get Unmask value
+   * @param masker
+   * @param propertyValue
+   * @return
+   */
+  private String getUnmaskedValue(Masker masker,String propertyValue) {
+    try {
+      propertyValue = masker.unmask(propertyValue);
+    } catch (MaskException e) {
+      LOG.error("Failed to unmask view property", e);
+    }
+    return propertyValue;
   }
 
   /**

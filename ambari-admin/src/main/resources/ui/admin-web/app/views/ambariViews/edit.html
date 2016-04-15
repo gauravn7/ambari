@@ -193,7 +193,7 @@
   <div class="panel-body property-form" popover="{{clusterConfigurableErrorMsg}}" popover-trigger="mouseenter">
     <div class="checkbox">
       <label>
-        <input type="radio" ng-model="$parent.isLocalCluster" ng-change="enableLocalCluster()" ng-disabled="!clusterConfigurable || editConfigurationDisabled || noClusterAvailible" ng-value="true" class="visibilityCheckbox"> {{'views.localCluster' | translate}}
+        <input type="radio" name="cluster-select" ng-model="$parent.isLocalCluster" ng-change="enableLocalCluster()" ng-disabled=" editConfigurationDisabled" ng-value="true" class="visibilityCheckbox"> {{'views.localCluster' | translate}}
       </label>
     </div>
     <div class="form-horizontal property-form">
@@ -207,48 +207,39 @@
       </div>
     </div>
     <p>&nbsp</p>
-    <div class="checkbox">
-      <label>
-        <input type="radio"
-         ng-model="$parent.isLocalCluster"
-         ng-disabled="editConfigurationDisabled"
-         ng-value="false"
-         ng-change="disableLocalCluster()"
-         class="visibilityCheckbox">
-        {{'views.custom' | translate}}
-      </label>
-    </div>
   </div>
   <div class="panel-body edit-view-custom-wrap">
-    <form name="propertiesForm" class="form-horizontal property-form" ng-hide="isConfigurationEmpty" novalidate>
-      <fieldset>
-        <div class="form-group" ng-repeat="property in configurationMeta | filter:{clusterConfig:true}" ng-class="{'has-error' : (!editConfigurationDisabled && !isLocalCluster && ((property.required && propertiesForm[property.name].$error.required && !editConfigurationDisabled) || propertiesForm[property.name].validationError))}">
-          <label for="" class="control-label col-sm-3" ng-class="{'not-required': !property.required}">{{property.label || property.displayName}}{{property.required ? '*' : ''}}</label>
-          <div ng-switch="property.type">
-            <div class="col-sm-9 checkbox" ng-switch-when="boolean">
-              <input type="checkbox" class="propertie-input" ng-disabled="isLocalCluster || editConfigurationDisabled" name="{{property.name}}" ng-model="configuration[property.name]" ng-true-value="true" ng-false-value="false" popover="{{property.description}}" popover-title="{{property.name}}" popover-trigger="mouseenter">
-            </div>
-            <div class="col-sm-9" ng-switch-default>
-              <input type="{{property.masked ? 'password' : 'text'}}" class="form-control propertie-input" ng-required="property.required && !isLocalCluster" ng-change="propertiesForm[property.name].validationError=''" ng-disabled="isLocalCluster || editConfigurationDisabled" name="{{property.name}}" ng-model="configuration[property.name]" popover="{{property.description}}" popover-title="{{property.name}}" popover-trigger="mouseenter" placeholder="{{property.placeholder}}">
-              <div class="alert alert-danger no-margin-bottom top-margin" ng-show='property.required && propertiesForm[property.name].$error.required && !editConfigurationDisabled && !isLocalCluster'>
-                {{'common.alerts.fieldIsRequired' | translate}}
-              </div>
-              <div class="alert alert-danger no-margin-bottom top-margin" ng-show='property.required && propertiesForm[property.name].validationError && !editConfigurationDisabled && !isLocalCluster'>
-                {{propertiesForm[property.name].validationMessage}}
+        <div class="panel-body property-form">
+          <div class="checkbox">
+            <label>
+              <input type="radio" name="cluster-select"
+                     ng-model="$parent.isLocalCluster"
+                     ng-disabled="editConfigurationDisabled"
+                     ng-value="false"
+                     ng-change="disableLocalCluster()"
+                     class="visibilityCheckbox">
+              Remote Cluster
+            </label>
+          </div>
+          <div class="form-horizontal property-form">
+            <div class="form-group">
+
+              <label for="" class="control-label col-sm-3 ng-binding not-required" >{{'views.custom' | translate}}</label>
+              <div>
+                <div class="col-sm-9">
+                  <select ng-model="remoteCluster" ng-disabled="$parent.isLocalCluster || editConfigurationDisabled" ng-change="onClusterChange()" class="clusters-name-dropdown form-control"  ng-options="o as o for o in remoteClusters"></select>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         <div class="form-group" ng-hide="editConfigurationDisabled">
           <div class="col-sm-offset-2 col-sm-10">
             <button class="btn btn-primary pull-right left-margin propertie-save" ng-click="saveConfiguration()">{{'common.controls.save' | translate}}</button>
             <button class="btn btn-default pull-right propertie-cancel" ng-click="cancelConfiguration()">{{'common.controls.cancel' | translate}}</button>
           </div>
         </div>
-      </fieldset>
-    </form>
-    <div ng-show="isConfigurationEmpty">
-      <div class="alert alert-info">{{'views.alerts.notDefined' | translate: '{term: constants.props}'}}</div>
+        </div>
     </div>
+  </div>
   </div>
 </div>

@@ -99,6 +99,17 @@ public class UpgradeCatalog240 extends AbstractUpgradeCatalog {
   public static final String BLUEPRINT_TABLE = "blueprint";
   public static final String VIEWINSTANCE_TABLE = "viewinstance";
   public static final String SHORT_URL_COLUMN = "short_url";
+  public static final String CLUSTER_TYPE_COLUMN = "cluster_type";
+  public static final String VIEW_CLUSTER_TABLE = "viewclusterconfiguration";
+  public static final String VIEW_CLUSTER_SERVICE_TABLE = "viewclusterservice";
+  public static final String VIEW_CLUSTER_PROPERTY_TABLE = "viewclusterproperty";
+  public static final String VIEW_SERVICE_TABLE = "viewservice";
+  public static final String VIEW_SERVICE_PARAMETER_TABLE = "viewserviceparameter";
+
+  public static final String NAME = "name";
+  public static final String SERVICE_NAME = "service_name";
+  public static final String CLUSTER_NAME = "cluster_name";
+
 
   @Inject
   PermissionDAO permissionDAO;
@@ -164,12 +175,15 @@ public class UpgradeCatalog240 extends AbstractUpgradeCatalog {
     createBlueprintSettingTable();
     updateHostRoleCommandTableDDL();
     updateViewInstanceEntityTable();
-
+    createViewClusterServicesTable();
   }
 
   private void updateViewInstanceEntityTable() throws SQLException {
     dbAccessor.addColumn(VIEWINSTANCE_TABLE,
             new DBColumnInfo(SHORT_URL_COLUMN, String.class, 255, null, true));
+
+    dbAccessor.addColumn(VIEWINSTANCE_TABLE,
+      new DBColumnInfo(CLUSTER_TYPE_COLUMN, String.class, 100, "AMBARI", true));
   }
 
   private void updateClusterTableDDL() throws SQLException {
@@ -1252,6 +1266,46 @@ public class UpgradeCatalog240 extends AbstractUpgradeCatalog {
         }
       }
     }
+  }
+
+  protected void createViewClusterServicesTable() throws SQLException {
+    List<DBColumnInfo> columns = new ArrayList<>();
+
+    LOG.info("Creating " + VIEW_CLUSTER_TABLE + " table");
+    columns.add(new DBColumnInfo(NAME, String.class, 255, null, false));
+    dbAccessor.createTable(VIEW_CLUSTER_TABLE, columns, NAME);
+
+    List<DBColumnInfo> viewClusterServiceColumns = new ArrayList<>();
+    LOG.info("Creating " + VIEW_CLUSTER_SERVICE_TABLE + " table");
+    viewClusterServiceColumns.add(new DBColumnInfo(NAME, String.class, 255, null, false));
+    viewClusterServiceColumns.add(new DBColumnInfo(CLUSTER_NAME, String.class, 255, null, false));
+    dbAccessor.createTable(VIEW_CLUSTER_SERVICE_TABLE, viewClusterServiceColumns, NAME,CLUSTER_NAME);
+
+    List<DBColumnInfo> viewClusterPropertyColumns = new ArrayList<>();
+    LOG.info("Creating " + VIEW_CLUSTER_PROPERTY_TABLE + " table");
+    viewClusterPropertyColumns.add(new DBColumnInfo(NAME, String.class, 255, null, false));
+    viewClusterPropertyColumns.add(new DBColumnInfo(CLUSTER_NAME, String.class, 255, null, false));
+    viewClusterPropertyColumns.add(new DBColumnInfo(SERVICE_NAME, String.class, 255, null, false));
+    viewClusterPropertyColumns.add(new DBColumnInfo("value", String.class, 2000, null, true));
+    dbAccessor.createTable(VIEW_CLUSTER_PROPERTY_TABLE, viewClusterPropertyColumns, NAME, CLUSTER_NAME, SERVICE_NAME);
+
+    List<DBColumnInfo> viewServiceColumns = new ArrayList<>();
+    LOG.info("Creating " + VIEW_SERVICE_TABLE + " table");
+    viewServiceColumns.add(new DBColumnInfo(NAME, String.class, 255, null, false));
+    dbAccessor.createTable(VIEW_SERVICE_TABLE, viewServiceColumns, NAME);
+
+    List<DBColumnInfo> viewServiceParameterColumns = new ArrayList<>();
+    LOG.info("Creating " + VIEW_SERVICE_PARAMETER_TABLE + " table");
+    viewServiceParameterColumns.add(new DBColumnInfo(NAME, String.class, 255, null, false));
+    viewServiceParameterColumns.add(new DBColumnInfo("view_service_name", String.class, 255, null, false));
+    viewServiceParameterColumns.add(new DBColumnInfo("description", String.class, 2048, null, true));
+    viewServiceParameterColumns.add(new DBColumnInfo("label", String.class, 255, null, true));
+    viewServiceParameterColumns.add(new DBColumnInfo("placeholder", String.class, 255, null, true));
+    viewServiceParameterColumns.add(new DBColumnInfo("default_value", String.class, 2000, null, true));
+    viewServiceParameterColumns.add(new DBColumnInfo("cluster_config", String.class, 255, null, true));
+    viewServiceParameterColumns.add(new DBColumnInfo("required", Character.class, 1, null, true));
+    viewServiceParameterColumns.add(new DBColumnInfo("masked", Character.class, 1, null, true));
+    dbAccessor.createTable(VIEW_SERVICE_PARAMETER_TABLE, viewServiceParameterColumns, NAME, "view_service_name");
   }
 
 }

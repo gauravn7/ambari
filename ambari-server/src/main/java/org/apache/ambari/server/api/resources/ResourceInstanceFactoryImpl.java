@@ -222,6 +222,14 @@ public class ResourceInstanceFactoryImpl implements ResourceInstanceFactory {
         resourceDefinition = new ViewResourceDefinition();
         break;
 
+      case ViewClusterInstance:
+        resourceDefinition = new ViewClusterInstanceResourceDefinition();
+        break;
+
+      case ViewService:
+        resourceDefinition = new ViewServiceResourceDefinition();
+        break;
+
       case ViewVersion:
         resourceDefinition = new ViewVersionResourceDefinition();
         break;

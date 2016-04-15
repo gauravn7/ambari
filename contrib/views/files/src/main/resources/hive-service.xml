@@ -1,0 +1,81 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<service-config>
+    <name>HIVE</name>
+    <version>1.0.0</version>
+    <min-ambari-version>2.4.0</min-ambari-version>
+
+    <parameter>
+        <name>hive.auth</name>
+        <description>Semicolon-separated authentication configs.</description>
+        <label>Hive Authentication</label>
+        <placeholder>auth=NONE</placeholder>
+        <default-value></default-value>
+        <cluster-config>fake</cluster-config>
+        <required>false</required>
+    </parameter>
+
+    <parameter>
+        <name>hive.host</name>
+        <description>Enter the HiveServer2 host. Host must be accessible from Ambari Server.</description>
+        <label>HiveServer2 Host</label>
+        <placeholder>127.0.0.1</placeholder>
+        <cluster-config>fake</cluster-config>
+        <required>true</required>
+    </parameter>
+
+    <parameter>
+        <name>hive.port</name>
+        <description>HiveServer2 Thrift port (example: 10000).</description>
+        <label>HiveServer2 Thrift port</label>
+        <placeholder>10000</placeholder>
+        <default-value>10000</default-value>
+        <cluster-config>hive-site/hive.server2.thrift.port</cluster-config>
+        <required>true</required>
+    </parameter>
+
+    <parameter>
+        <name>hive.http.port</name>
+        <description>HiveServer2 Http port (example: 10001).</description>
+        <label>HiveServer2 Http port</label>
+        <placeholder>10001</placeholder>
+        <default-value>10001</default-value>
+        <cluster-config>hive-site/hive.server2.thrift.http.port</cluster-config>
+        <required>true</required>
+    </parameter>
+
+    <parameter>
+        <name>hive.http.path</name>
+        <description>HiveServer2 Http path (example: cliservice).</description>
+        <label>HiveServer2 Http path</label>
+        <placeholder>cliservice</placeholder>
+        <default-value>cliservice</default-value>
+        <cluster-config>hive-site/hive.server2.thrift.http.path</cluster-config>
+        <required>true</required>
+    </parameter>
+
+    <parameter>
+        <name>hive.transport.mode</name>
+        <description>HiveServer2 Transport Mode (example: http/binary).</description>
+        <label>HiveServer2 Transport Mode</label>
+        <placeholder>binary</placeholder>
+        <default-value>binary</default-value>
+        <cluster-config>hive-site/hive.server2.transport.mode</cluster-config>
+        <required>true</required>
+    </parameter>
+
+</service-config>

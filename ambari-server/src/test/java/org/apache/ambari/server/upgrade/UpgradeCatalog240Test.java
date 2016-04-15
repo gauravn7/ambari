@@ -215,6 +215,24 @@ public class UpgradeCatalog240Test {
     Capture<DBAccessor.DBColumnInfo> viewInstanceShortUrlInfo = newCapture();
     dbAccessor.addColumn(eq(UpgradeCatalog240.VIEWINSTANCE_TABLE), capture(viewInstanceShortUrlInfo));
 
+    Capture<DBAccessor.DBColumnInfo> viewInstanceClusterType = newCapture();
+    dbAccessor.addColumn(eq(UpgradeCatalog240.VIEWINSTANCE_TABLE), capture(viewInstanceClusterType));
+
+    // Test creation of View cluster service tables
+    Capture<List<DBAccessor.DBColumnInfo>> capturedViewClusterColumns = EasyMock.newCapture();
+    dbAccessor.createTable(eq(UpgradeCatalog240.VIEW_CLUSTER_TABLE), capture(capturedViewClusterColumns),anyString());
+
+    Capture<List<DBAccessor.DBColumnInfo>> capturedViewClusterServiceColumns = EasyMock.newCapture();
+    dbAccessor.createTable(eq(UpgradeCatalog240.VIEW_CLUSTER_SERVICE_TABLE), capture(capturedViewClusterServiceColumns),anyString(),anyString());
+
+    Capture<List<DBAccessor.DBColumnInfo>> capturedViewClusterPropertyColumns = EasyMock.newCapture();
+    dbAccessor.createTable(eq(UpgradeCatalog240.VIEW_CLUSTER_PROPERTY_TABLE), capture(capturedViewClusterPropertyColumns),anyString(),anyString(),anyString());
+
+    Capture<List<DBAccessor.DBColumnInfo>> capturedViewServiceColumns = EasyMock.newCapture();
+    dbAccessor.createTable(eq(UpgradeCatalog240.VIEW_SERVICE_TABLE), capture(capturedViewServiceColumns),anyString());
+
+    Capture<List<DBAccessor.DBColumnInfo>> capturedViewServiceParameterColumns = EasyMock.newCapture();
+    dbAccessor.createTable(eq(UpgradeCatalog240.VIEW_SERVICE_PARAMETER_TABLE), capture(capturedViewServiceParameterColumns),anyString(),anyString());
 
     replay(dbAccessor, configuration, connection, statement, resultSet);
 
@@ -356,6 +374,40 @@ public class UpgradeCatalog240Test {
     Assert.assertNotNull(viewInstanceEntityUrlColInfoValue);
     Assert.assertEquals("short_url", viewInstanceEntityUrlColInfoValue.getName());
     Assert.assertEquals(String.class, viewInstanceEntityUrlColInfoValue.getType());
+
+    // Verify cluster_tye column
+    DBAccessor.DBColumnInfo viewInstanceEntityClusterTypeValue = viewInstanceClusterType.getValue();
+    Assert.assertNotNull(viewInstanceClusterType);
+    Assert.assertEquals("cluster_type", viewInstanceEntityClusterTypeValue.getName());
+    Assert.assertEquals(String.class, viewInstanceEntityClusterTypeValue.getType());
+
+    //verify view cluster service tables
+    Assert.assertEquals(1,capturedViewClusterColumns.getValue().size());
+    Assert.assertEquals(UpgradeCatalog240.NAME,capturedViewClusterColumns.getValue().get(0).getName());
+
+    Assert.assertEquals(2,capturedViewClusterServiceColumns.getValue().size());
+    Assert.assertEquals(UpgradeCatalog240.NAME,capturedViewClusterServiceColumns.getValue().get(0).getName());
+    Assert.assertEquals(UpgradeCatalog240.CLUSTER_NAME,capturedViewClusterServiceColumns.getValue().get(1).getName());
+
+    Assert.assertEquals(4,capturedViewClusterPropertyColumns.getValue().size());
+    Assert.assertEquals(UpgradeCatalog240.NAME,capturedViewClusterPropertyColumns.getValue().get(0).getName());
+    Assert.assertEquals(UpgradeCatalog240.CLUSTER_NAME,capturedViewClusterPropertyColumns.getValue().get(1).getName());
+    Assert.assertEquals(UpgradeCatalog240.SERVICE_NAME,capturedViewClusterPropertyColumns.getValue().get(2).getName());
+    Assert.assertEquals("value",capturedViewClusterPropertyColumns.getValue().get(3).getName());
+
+    Assert.assertEquals(capturedViewServiceColumns.getValue().size(),1);
+    Assert.assertEquals(UpgradeCatalog240.NAME,capturedViewServiceColumns.getValue().get(0).getName());
+
+    Assert.assertEquals(capturedViewServiceParameterColumns.getValue().size(),9);
+    Assert.assertEquals(UpgradeCatalog240.NAME,capturedViewServiceParameterColumns.getValue().get(0).getName());
+    Assert.assertEquals("view_service_name",capturedViewServiceParameterColumns.getValue().get(1).getName());
+    Assert.assertEquals("description",capturedViewServiceParameterColumns.getValue().get(2).getName());
+    Assert.assertEquals("label",capturedViewServiceParameterColumns.getValue().get(3).getName());
+    Assert.assertEquals("placeholder",capturedViewServiceParameterColumns.getValue().get(4).getName());
+    Assert.assertEquals("default_value",capturedViewServiceParameterColumns.getValue().get(5).getName());
+    Assert.assertEquals("cluster_config",capturedViewServiceParameterColumns.getValue().get(6).getName());
+    Assert.assertEquals("required",capturedViewServiceParameterColumns.getValue().get(7).getName());
+    Assert.assertEquals("masked",capturedViewServiceParameterColumns.getValue().get(8).getName());
 
     verify(dbAccessor);
   }

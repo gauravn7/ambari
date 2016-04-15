@@ -182,11 +182,12 @@ angular.module('ambariAdminConsole')
 
     data.properties = settings;
 
-    if(instanceInfo.isLocalCluster) {
+//    if(instanceInfo.isLocalCluster) {
       data.cluster_handle = instanceInfo.clusterName;
-    } else {
-      angular.extend(data.properties, properties);
-    }
+      data.cluster_type= instanceInfo.clusterType;
+//    } else {
+//      angular.extend(data.properties, properties);
+//    }
 
     $http({
       method: 'POST',

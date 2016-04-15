@@ -54,12 +54,6 @@ public class ParameterConfig {
   private String defaultValue;
 
   /**
-   * The parameter cluster configuration id value.
-   */
-  @XmlElement(name="cluster-config")
-  private String clusterConfig;
-
-  /**
    * Indicates whether or not the parameter is required.
    */
   private boolean required;
@@ -112,15 +106,6 @@ public class ParameterConfig {
    */
   public String getDefaultValue() {
     return defaultValue;
-  }
-
-  /**
-   * Get the cluster configuration id used to pull configuration from an associated Ambari cluster.
-   *
-   * @return the cluster configuration id
-   */
-  public String getClusterConfig() {
-    return clusterConfig;
   }
 
   /**

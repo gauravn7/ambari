@@ -39,6 +39,7 @@ import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
@@ -122,21 +123,6 @@ public class ViewInstanceEntityTest {
       "        <name>p2</name>\n" +
       "        <description>Parameter 2.</description>\n" +
       "        <required>false</required>\n" +
-      "    </parameter>\n" +
-      "    <instance>\n" +
-      "        <name>INSTANCE1</name>\n" +
-      "        <label>My Instance 1!</label>\n" +
-      "    </instance>\n" +
-      "</view>";
-
-  private static String XML_CONFIG_INSTANCE = "<view>\n" +
-      "    <name>MY_VIEW</name>\n" +
-      "    <label>My View!</label>\n" +
-      "    <version>1.0.0</version>\n" +
-      "    <parameter>\n" +
-      "        <name>p1</name>\n" +
-      "        <cluster-config>hadoop-env/hdfs_user</cluster-config>\n" +
-      "        <required>true</required>\n" +
       "    </parameter>\n" +
       "    <instance>\n" +
       "        <name>INSTANCE1</name>\n" +
@@ -439,22 +425,7 @@ public class ViewInstanceEntityTest {
     ViewEntity viewEntity = ViewRegistryTest.getViewEntity(config, ambariConfig, getClass().getClassLoader(), "");
     ViewInstanceEntity viewInstanceEntity = ViewRegistryTest.getViewInstanceEntity(viewEntity, config.getInstances().get(0));
 
-    viewInstanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE);
-  }
-
-  @Test
-  public void testValidateWithClusterConfig() throws Exception {
-
-    Properties properties = new Properties();
-    properties.put("p1", "v1");
-
-    Configuration ambariConfig = new Configuration(properties);
-
-    ViewConfig config = ViewConfigTest.getConfig(XML_CONFIG_INSTANCE);
-    ViewEntity viewEntity = ViewRegistryTest.getViewEntity(config, ambariConfig, getClass().getClassLoader(), "");
-    ViewInstanceEntity viewInstanceEntity = ViewRegistryTest.getViewInstanceEntity(viewEntity, config.getInstances().get(0));
-
-    viewInstanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE);
+    viewInstanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE,new HashMap<String, String>());
   }
 
   @Test
@@ -473,7 +444,7 @@ public class ViewInstanceEntityTest {
     validator.result = new ValidationResultImpl(true, "detail");
     viewEntity.setValidator(validator);
 
-    viewInstanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE);
+    viewInstanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE,new HashMap<String, String>());
   }
 
   @Test
@@ -489,7 +460,7 @@ public class ViewInstanceEntityTest {
     ViewInstanceEntity viewInstanceEntity = ViewRegistryTest.getViewInstanceEntity(viewEntity, config.getInstances().get(0));
 
     try {
-      viewInstanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE);
+      viewInstanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE,new HashMap<String, String>());
       Assert.fail("Expected an IllegalStateException");
     } catch (ValidationException e) {
       // expected
@@ -513,7 +484,7 @@ public class ViewInstanceEntityTest {
     viewEntity.setValidator(validator);
 
     try {
-      viewInstanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE);
+      viewInstanceEntity.validate(viewEntity, Validator.ValidationContext.PRE_CREATE,new HashMap<String, String>());
       Assert.fail("Expected an IllegalStateException");
     } catch (ValidationException e) {
       // expected
@@ -536,7 +507,8 @@ public class ViewInstanceEntityTest {
     validator.result = new ValidationResultImpl(true, "detail");
     viewEntity.setValidator(validator);
 
-    InstanceValidationResultImpl result = viewInstanceEntity.getValidationResult(viewEntity, Validator.ValidationContext.PRE_CREATE);
+    InstanceValidationResultImpl result = viewInstanceEntity.getValidationResult(
+      viewEntity, Validator.ValidationContext.PRE_CREATE,new HashMap<String, String>());
 
     Map<String, ValidationResult> propertyResults = result.getPropertyResults();
 

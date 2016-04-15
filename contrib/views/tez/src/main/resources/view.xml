@@ -21,27 +21,7 @@ limitations under the License. Kerberos, LDAP, Custom. Binary/Htt
   <build>${env.BUILD_NUMBER}</build>
   <description>Ambari view for Apache Tez</description>
 
-  <parameter>
-    <name>yarn.timeline-server.url</name>
-    <description>The URL to the YARN Application Timeline Server, used to provide Tez information. Typically this is the yarn.timeline-service.webapp.address property in the yarn-site.xml configuration. Url must be accessible from Ambari server.</description>
-    <label>YARN Timeline Server URL</label>
-    <placeholder>yarn.timeline-service.hostname:8188</placeholder>
-    <cluster-config>yarn-site/yarn.timeline-service.webapp.address</cluster-config>
-  </parameter>
-  <parameter>
-    <name>yarn.resourcemanager.url</name>
-    <description>The URL to the YARN ResourceManager, used to provide YARN Application data. If YARN ResourceManager HA is enabled, provide a comma separated list of URLs for all the Resource Managers.</description>
-    <label>YARN ResourceManager URL</label>
-    <placeholder>yarn.resourcemanager.hostname:8088</placeholder>
-    <cluster-config>yarn-site/yarn.resourcemanager.webapp.address</cluster-config>
-  </parameter>
-  <parameter>
-    <name>hdfs.auth_to_local</name>
-    <description>Auth to Local Configuration</description>
-    <label>Auth To Local</label>
-    <required>false</required>
-    <cluster-config>core-site/hadoop.security.auth_to_local</cluster-config>
-  </parameter>
+  <service>YARN{1.0.0}</service>
 
   <!-- The status resource exists to show the subset of properties that any user is allowed to see, not just an admin user. -->
   <resource>

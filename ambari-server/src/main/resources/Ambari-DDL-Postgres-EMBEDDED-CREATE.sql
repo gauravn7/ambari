@@ -530,6 +530,7 @@ CREATE TABLE ambari.viewinstance (
   alter_names SMALLINT NOT NULL DEFAULT 1,
   cluster_handle VARCHAR(255),
   short_url VARCHAR (255),
+  cluster_type VARCHAR(100) DEFAULT 'AMBARI',
   PRIMARY KEY(view_instance_id));
 
 CREATE TABLE ambari.viewinstanceproperty (
@@ -546,7 +547,6 @@ CREATE TABLE ambari.viewparameter (
   label VARCHAR(255),
   placeholder VARCHAR(255),
   default_value VARCHAR(2000),
-  cluster_config VARCHAR(255),
   required CHAR(1),
   masked CHAR(1),
   PRIMARY KEY(view_name, name));
@@ -1749,3 +1749,41 @@ CREATE TABLE clusterEvent (
   host      TEXT, rack TEXT
 );
 GRANT ALL PRIVILEGES ON TABLE clusterEvent TO "mapred";
+
+-- view services
+CREATE TABLE ambari.viewclusterconfiguration (
+  name VARCHAR(255) NOT NULL,
+  PRIMARY KEY(name)
+);
+
+CREATE TABLE ambari.viewclusterservice (
+  cluster_name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  PRIMARY KEY(cluster_name, name)
+);
+
+CREATE TABLE ambari.viewclusterproperty (
+  cluster_name VARCHAR(255) NOT NULL,
+  service_name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  value VARCHAR(2000),
+  PRIMARY KEY(cluster_name,service_name,name)
+);
+
+CREATE TABLE ambari.viewservice (
+  name VARCHAR(255) NOT NULL,
+  PRIMARY KEY(name)
+);
+
+CREATE TABLE ambari.viewserviceparameter (
+  view_service_name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description VARCHAR(2048),
+  label VARCHAR(255),
+  placeholder VARCHAR(255),
+  default_value VARCHAR(2000),
+  cluster_config VARCHAR(255),
+  required CHAR(1),
+  masked CHAR(1),
+  PRIMARY KEY(view_service_name, name)
+);

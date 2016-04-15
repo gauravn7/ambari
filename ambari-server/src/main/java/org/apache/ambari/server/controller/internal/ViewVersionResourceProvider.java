@@ -58,6 +58,7 @@ public class ViewVersionResourceProvider extends AbstractResourceProvider {
   public static final String VIEW_STATUS_DETAIL_PROPERTY_ID = "ViewVersionInfo/status_detail";
   public static final String CLUSTER_CONFIG_PROPERTY_ID     = "ViewVersionInfo/cluster_configurable";
   public static final String SYSTEM_PROPERTY_ID             = "ViewVersionInfo/system";
+  public static final String SERVICES_PROPERTY_ID             = "ViewVersionInfo/services";
 
   /**
    * The key property ids for a view resource.
@@ -87,6 +88,7 @@ public class ViewVersionResourceProvider extends AbstractResourceProvider {
     propertyIds.add(VIEW_STATUS_DETAIL_PROPERTY_ID);
     propertyIds.add(CLUSTER_CONFIG_PROPERTY_ID);
     propertyIds.add(SYSTEM_PROPERTY_ID);
+    propertyIds.add(SERVICES_PROPERTY_ID);
   }
 
 
@@ -149,6 +151,7 @@ public class ViewVersionResourceProvider extends AbstractResourceProvider {
             setResourceProperty(resource, VIEW_STATUS_DETAIL_PROPERTY_ID, viewDefinition.getStatusDetail(), requestedIds);
             setResourceProperty(resource, CLUSTER_CONFIG_PROPERTY_ID, viewDefinition.isClusterConfigurable(), requestedIds);
             setResourceProperty(resource, SYSTEM_PROPERTY_ID, viewDefinition.isSystem(), requestedIds);
+            setResourceProperty(resource, SERVICES_PROPERTY_ID, viewDefinition.getViewServices(), requestedIds);
 
             resources.add(resource);
           }

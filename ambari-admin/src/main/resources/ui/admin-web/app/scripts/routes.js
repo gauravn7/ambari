@@ -98,6 +98,28 @@ angular.module('ambariAdminConsole')
       templateUrl: 'views/ambariViews/create.html',
       controller: 'CreateViewInstanceCtrl'
     }
+
+  },
+
+  remotecluster: {
+    list: {
+      url:'/remoteclusters',
+      templateUrl: 'views/ambariViews/listClusters.html',
+      controller: 'RemoteClusterListCtrl'
+    },
+    edit: {
+      url:'/remoteclusters/:clusterName/edit',
+      templateUrl: 'views/ambariViews/viewClusters.html',
+      controller: 'RemoteClusterInstanceCtrl',
+      isEditPage : true
+    },
+    create: {
+      url:'/remoteclusters/create',
+      templateUrl: 'views/ambariViews/viewClusters.html',
+      controller: 'RemoteClusterInstanceCtrl',
+      isEditPage:false
+    }
+
   },
   stackVersions: {
     list: {

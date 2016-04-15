@@ -18,7 +18,7 @@
 'use strict';
 
 angular.module('ambariAdminConsole')
-.controller('CreateViewInstanceCtrl',['$scope', 'View', 'Alert', 'Cluster', '$routeParams', '$location', 'UnsavedDialog', '$translate', function($scope, View, Alert, Cluster, $routeParams, $location, UnsavedDialog, $translate) {
+.controller('CreateViewInstanceCtrl',['$scope', 'View','RemoteCluster', 'Alert', 'Cluster', '$routeParams', '$location', 'UnsavedDialog','$translate', function($scope, View,RemoteCluster, Alert, Cluster, $routeParams, $location, UnsavedDialog, $translate) {
   var $t = $translate.instant;
   $scope.form = {};
   $scope.constants = {
@@ -33,12 +33,12 @@ angular.module('ambariAdminConsole')
 
       $scope.view = viewVersion;
       parameters = viewVersion.ViewVersionInfo.parameters;
+      $scope.services = viewVersion.ViewVersionInfo.services;
 
       angular.forEach(parameters, function (item) {
         item.value = item['defaultValue'];
-        item.clusterConfig = !!item.clusterConfig;
         item.displayName = item.name.replace(/\./g, '\.\u200B');
-        item.clusterConfig ? $scope.numberOfClusterConfigs++ : $scope.numberOfSettingConfigs++;
+        $scope.numberOfSettingConfigs++;
       });
 
       $scope.clusterConfigurable = viewVersion.ViewVersionInfo.cluster_configurable;
@@ -57,6 +57,7 @@ angular.module('ambariAdminConsole')
         isLocalCluster: false
       };
       loadClusters();
+      loadViewRemoteClusters();
     });
   }
 
@@ -68,6 +69,46 @@ angular.module('ambariAdminConsole')
       loadMeta();
     }
   });
+
+//  $scope.$watch(function(scope){
+//    return scope.remoteCluster ;
+//  }, function(remoteCluster){
+//    if(remoteCluster){
+//      console.log(remoteCluster);
+//    }
+//  });
+
+  $scope.onRemoteClusterChange = function(){
+    $scope.remoteCluster = this.remoteCluster;
+    validateServices();
+  };
+
+  function validateServices(){
+   $scope.remoteClusterError = false ;
+    if(!$scope.instance.isLocalCluster && $scope.services){
+      var absentService = [];
+      $scope.services.forEach(function(service){
+        if(!servicePresent(service)){
+          absentService.push(service);
+        }
+      })
+
+      if(absentService.length > 0){
+        $scope.remoteClusterError = true ;
+        $scope.remoteClusterErrorMsg = absentService + " Not Present in Remote Cluster ";
+      }
+    }
+  }
+
+  function servicePresent(serviceName){
+   var isPresent = false;
+   $scope.remoteCluster.services.forEach(function(item){
+     if(serviceName == item.name){
+      isPresent = true;
+     }
+   });
+   return isPresent;
+  }
 
   $scope.enableLocalCluster = function () {
     if($scope.errorKeys.length > 0) {
@@ -91,9 +132,13 @@ angular.module('ambariAdminConsole')
   $scope.clusterConfigurable = false;
   $scope.clusterConfigurableErrorMsg = "";
   $scope.clusters = [];
+  $scope.remoteClusters = [];
   $scope.noClusterAvailible = true;
+  $scope.noRemoteClusterAvailible = true;
   $scope.cluster = null;
-  $scope.numberOfClusterConfigs = 0;
+  $scope.remoteCluster = null;
+  $scope.remoteClusterError = false;
+  $scope.remoteClusterErrorMsg = '';
   $scope.numberOfSettingConfigs = 0;
 
   function loadClusters () {
@@ -108,6 +153,21 @@ angular.module('ambariAdminConsole')
         $scope.clusters.push($t('common.noClusters'));
       }
       $scope.cluster = $scope.clusters[0];
+    });
+  }
+
+  function loadViewRemoteClusters() {
+    RemoteCluster.all().then(function (clusters){
+     if(clusters.length >0){
+       clusters.forEach(function(cluster) {
+         $scope.remoteClusters.push(cluster)
+       });
+       $scope.noRemoteClusterAvailible = false;
+       }else{
+         $scope.remoteClusters.push("No Clusters");
+       }
+       $scope.remoteCluster = $scope.remoteClusters[0];
+       validateServices();
     });
   }
 
@@ -128,7 +188,12 @@ angular.module('ambariAdminConsole')
     $scope.form.instanceCreateForm.submitted = true;
     if($scope.form.instanceCreateForm.$valid){
       $scope.form.instanceCreateForm.isSaving = true;
-      $scope.instance.clusterName = $scope.cluster;
+      console.log($scope);
+      $scope.instance.clusterName = $scope.instance.isLocalCluster ? $scope.cluster : $scope.remoteCluster.name;
+      $scope.instance.clusterType = "STANDALONE";
+      if($scope.instance.isLocalCluster){
+        $scope.instance.clusterType = "AMBARI";
+      }
       View.createInstance($scope.instance)
         .then(function(data) {
           Alert.success($t('views.alerts.instanceCreated', {instanceName: $scope.instance.instance_name}));

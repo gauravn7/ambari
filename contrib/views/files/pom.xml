@@ -247,6 +247,11 @@
         <includes>
           <include>view.xml</include>
           <include>view.log4j.properties</include>
+          <include>hdfs-service.xml</include>
+          <include>hive-service.xml</include>
+          <include>remotecluster-service.xml</include>
+          <include>webhcat-service.xml</include>
+          <include>yarn-service.xml</include>
         </includes>
       </resource>
 

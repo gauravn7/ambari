@@ -40,15 +40,18 @@ public class PropertyValidator implements Validator {
 
   @Override
   public ValidationResult validateProperty(String property, ViewInstanceDefinition viewInstanceDefinition, ValidationContext validationContext) {
-    if (viewInstanceDefinition.getClusterHandle() != null) {
+    if (viewInstanceDefinition.getClusterHandle() != null && viewInstanceDefinition.getClusterType().equals("AMBARI")) {
       return ValidationResult.SUCCESS;
     }
+    String ambariServerUrl = viewInstanceDefinition.getPropertyMap().get(AMBARI_SERVER_URL);
+    return validateProperty(property,ambariServerUrl,validationContext);
+  }
 
+  @Override
+  public ValidationResult validateProperty(String property, String value, ValidationContext mode) {
     if (property.equals(AMBARI_SERVER_URL)) {
-      String ambariServerUrl = viewInstanceDefinition.getPropertyMap().get(AMBARI_SERVER_URL);
-
-      if (!(validateUrl(new String[] {"http", "https"}, ambariServerUrl)
-        && validatePortAndPath(PATH_REGEX, ambariServerUrl))) {
+      if (!(validateUrl(new String[] {"http", "https"}, value)
+        && validatePortAndPath(PATH_REGEX, value))) {
         return new InvalidPropertyValidationResult(false,
           "URL should contain protocol, hostname, port, cluster name, e.g. http://ambari.server:8080/api/v1/clusters/MyCluster");
       }
